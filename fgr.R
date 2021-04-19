@@ -41,6 +41,9 @@ df <- merge(df, spCorr[!is.na(spCorr$franceCode), c('latinName', 'franceCode')],
 fgrSpCode <- data.frame(latinName = 'Fagus sylvatica', fgrCode = 'BE')
 df <- merge(df, fgrSpCode, by = 'latinName')
 
+# add a column with tree id
+df$tree <- c(1:nrow(df))
+
 # calculate stand level variables
 df <- df %>% group_by(site) %>%
             mutate(N = sum(weight),
@@ -52,9 +55,79 @@ df <- df %>% group_by(site) %>%
 #
 
 ###############################################################
-# apply disturbance
+# calculate critical wind speed for overturning and breakage
+# for all trees
 ###############################################################
 
+i <- 1
+
+
+df <- df %>% filter(D_cm>=7.5)
+
+# single tree calculation
+damage <- function(i, df){
+  output <- fg_tmc(stand_id = as.character(df$site[i]),
+         tree_id = as.character(df$tree[i]),
+         species = df$fgrCode[i],
+         tree_ht = df$H_m[i],
+         dbh = df$D_cm[i],
+         spacing_current = df$spacing[i],
+         stand_mean_ht = df$meanH[i],
+         stand_top_ht = df$topH[i],
+         stand_mean_dbh = df$meanDBH[i],
+         stem_vol = df$V_m3[i],
+         full_output = 0)
+  output <- output$u10_damage
+  return(output)
+}
+# damage(1, df)
+
+# vectorise for multiple stands and trees
+lapply(c(1:nrow(df)), damage, df)
+
+
+
+
+
+
+# TODO
+# -->  ne semble pas fonctionner sur les petits diamètres <7.5
+# --> il faut un tree id venant des modelisateurs
+# --> vectoriser sur tous les sites (group_by)
+# --> verifier toute la procedure avec Barry
+# --> sortir les peuplements perturbés
+#
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# single tree calculation
+damage <- function(df, i){
+  output <- fg_tmc(stand_id = as.character(df$site[i]),
+         tree_id = as.character(df$tree[i]),
+         species = df$fgrCode[i],
+         tree_ht = df$H_m[i],
+         dbh = df$D_cm[i],
+         spacing_current = df$spacing[i],
+         stand_mean_ht = df$meanH[i],
+         stand_top_ht = df$topH[i],
+         stand_mean_dbh = df$meanDBH[i],
+         stem_vol = df$V_m3[i],
+         full_output = 0)
+  output <- output$u10_damage
+  return(output)
+}
+damage(df, i)
 
 
 
