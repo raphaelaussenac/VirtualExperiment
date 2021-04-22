@@ -47,15 +47,34 @@ df <- merge(df, spCorr[!is.na(spCorr$franceCode), c('latinName', 'franceCode')],
 df <- merge(df, fgrSpCode, by = 'latinName')
 
 # calculate stand level variables
+# first calculate dominant height = mean height of 100 trees with largest dbh
 df <- df %>% group_by(site) %>%
-            mutate(N = sum(weight),
-            meanDBH = sum(D_cm * weight) / sum(weight),
-            # Dg = sqrt(sum(D_cm^2 * weight)/sum(weight)),
-            meanH = sum(H_m * weight) /sum(weight),
-            topH = max(H_m),
-            spacing = sqrt(10000/N)) %>%
-            ungroup()
+             arrange(-D_cm) %>%
+             mutate(Ncumul = cumsum(weight),
+                    XX = Ncumul-100,
+                    YY = ifelse(XX >= 0,1,0),
+                    ZZ = cumsum(YY),
+                    weightTopH100 = ifelse(ZZ < 1, weight, ifelse(ZZ == 1, weight - XX, 0)),
+                    WW = round(cumsum(weightTopH100),2),
+                    domH = sum(H_m * weightTopH100) /sum(weightTopH100)) %>%
+             select(-Ncumul, -XX, -YY, -ZZ, -weightTopH100, -WW) %>%
+             ungroup()
 #
+# then calculate other stand variables
+df <- df %>% group_by(site) %>%
+             mutate(N = sum(weight),
+             # meanDBH = sum(D_cm * weight) / sum(weight),  # arithmetic mean
+             Dg = sqrt(sum(D_cm^2 * weight)/sum(weight)),   # quadratic mean
+             meanH = sum(H_m * weight) /sum(weight),
+             spacing = sqrt(10000/N)) %>%
+             ungroup()
+#
+
+# plot heights
+# ggplot(data = df)+
+# geom_boxplot(aes(x = as.factor(site), y = H_m)) +
+# geom_point(aes(x = as.factor(site), y = meanH), col = 'green', size = 5) +
+# geom_point(aes(x = as.factor(site), y = domH), col = 'orange', size = 5)
 
 ###############################################################
 # calculate critical wind speed cws for all trees
@@ -71,8 +90,8 @@ damage <- function(i, df){
          dbh = df$D_cm[i],
          spacing_current = df$spacing[i],
          stand_mean_ht = df$meanH[i],
-         stand_top_ht = df$topH[i],
-         stand_mean_dbh = df$meanDBH[i],
+         stand_top_ht = df$domH[i],
+         stand_mean_dbh = df$Dg[i],
          stem_vol = df$V_m3[i],
          full_output = 0)
   return(c(output$tree_id, output$u10_damage))
@@ -133,6 +152,26 @@ saveStands <- function(i, standList){
 lapply(c(1:length(standList)), saveStands, standList)
 
 
-# TODO
-# --> verifier toute la procedure avec Barry (calcul de top_ht, spacing... et tous les autres arguments, utilisation de u10_damage)
-#
+###############################################################
+# check
+###############################################################
+library(ggplot2)
+
+ggplot()+
+geom_bar(data = df[df$site == 27,], aes(x = D_cm, y = weight, fill = as.factor(species)), stat = 'identity') +
+geom_bar(data = stands75[stands75$site == 27,], aes(x = D_cm, y = weight), col = 'grey', fill = 'grey', stat = 'identity', width = 0.5) +
+facet_grid(as.factor(species) ~ site) +
+theme_light() +
+theme(legend.position = "bottom")
+
+
+ggplot()+
+geom_point(data = df, aes(x = D_cm, y = cws_kmh)) +
+geom_hline(yintercept = 75, col = 'red') +
+geom_hline(yintercept = 90, col = 'red') +
+geom_hline(yintercept = 100, col = 'red') +
+facet_wrap(. ~ site)
+
+
+
+# ----------> garder > ou < à cws ????
