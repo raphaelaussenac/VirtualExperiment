@@ -10,12 +10,15 @@ rm(list = ls())
 # devtools::install_github("tom-locatelli/fgr", build_vignettes = FALSE)
 library(fgr)
 library(dplyr)
+library(ggplot2)
 
 # set work directory
 setwd("C:/Users/raphael.aussenac/Documents/GitHub/VirtualExperiment")
 
 # load pre-disturbance stands
-df <- read.csv('./data/salem/virtualExperiment_SALEM_02_2021.csv')
+# define columns classes (because species = 2 or 02 causes problems)
+dfClass <- c('integer', 'integer', rep('character',3), rep('numeric',6))
+df <- read.csv('./data/salem/virtualExperiment_SALEM_02_2021.csv', colClasses = dfClass)
 
 # load sp correspondance table
 spCorr <- read.csv('./data/spCodeCorrespond.csv')
@@ -63,18 +66,45 @@ df <- df %>% group_by(site) %>%
 # then calculate other stand variables
 df <- df %>% group_by(site) %>%
              mutate(N = sum(weight),
-             # meanDBH = sum(D_cm * weight) / sum(weight),  # arithmetic mean
-             Dg = sqrt(sum(D_cm^2 * weight)/sum(weight)),   # quadratic mean
-             meanH = sum(H_m * weight) /sum(weight),
-             spacing = sqrt(10000/N)) %>%
+                    # meanDBH = sum(D_cm * weight) / sum(weight),  # arithmetic mean
+                    Dg = sqrt(sum(D_cm^2 * weight)/sum(weight)),   # quadratic mean
+                    meanH = sum(H_m * weight) / sum(weight),
+                    spacing = sqrt(10000/N)) %>%
              ungroup()
 #
-
 # plot heights
-# ggplot(data = df)+
-# geom_boxplot(aes(x = as.factor(site), y = H_m)) +
-# geom_point(aes(x = as.factor(site), y = meanH), col = 'green', size = 5) +
-# geom_point(aes(x = as.factor(site), y = domH), col = 'orange', size = 5)
+ggplot(data = df)+
+geom_boxplot(aes(x = as.factor(site), y = H_m)) +
+geom_point(aes(x = as.factor(site), y = meanH), col = 'green', size = 5) +
+geom_point(aes(x = as.factor(site), y = domH), col = 'orange', size = 5)
+
+###############################################################
+# calculate normalised BAl competition index
+###############################################################
+
+# calculate tree and stand BA
+df <- df %>% mutate(BAtree = (pi * (df$D_cm/200)^2) * df$weight) %>%
+             group_by(site) %>% mutate(BAtot = sum((pi * (D_cm/200)^2) * weight)) %>%
+             ungroup()
+#
+# assign to each tree the ratio of "BA of larger trees" / BAtot
+df <- df %>% arrange(-D_cm) %>% mutate(Drank = 1:nrow(df)) %>% group_by(site) %>%
+             mutate(BAl = cumsum(BAtree))
+# shift column BAl down by one row
+siteList <- sort(unique(df$site))
+for(i in siteList){
+  a <- as.data.frame(df[df$site == i, 'BAl'][1:(nrow(df[df$site == i, 'BAl'])-1),])
+  df[df$site == i, 'BAl'] <- c(0, a$BAl)
+}
+# competition index
+df$CI <- df$BAl / df$BAtot
+
+# remove useless columns
+df <- df %>% select(-BAtree, -BAtot, -Drank, -BAl)
+
+# ---> envoyer sample à Barry ---------------------------------------------------------------
+# df <- df %>% select(site, tree, fgrSpCode, H_m, D_cm, weight, spacing, meanH, domH, Dg, V_m3, CI)
+# write.csv(df, 'C:/Users/raphael.aussenac/Desktop/sample.csv', row.names = F)
 
 ###############################################################
 # calculate critical wind speed cws for all trees
@@ -84,16 +114,18 @@ df <- df %>% group_by(site) %>%
 # i <- 1
 damage <- function(i, df){
   output <- fg_tmc(stand_id = as.character(df$site[i]),
-         tree_id = as.character(df$tree[i]),
-         species = df$fgrSpCode[i],
-         tree_ht = df$H_m[i],
-         dbh = df$D_cm[i],
-         spacing_current = df$spacing[i],
-         stand_mean_ht = df$meanH[i],
-         stand_top_ht = df$domH[i],
-         stand_mean_dbh = df$Dg[i],
-         stem_vol = df$V_m3[i],
-         full_output = 0)
+                   tree_id = as.character(df$tree[i]),
+                   species = df$fgrSpCode[i],
+                   tree_ht = df$H_m[i],
+                   dbh = df$D_cm[i],
+                   spacing_current = df$spacing[i],
+                   stand_mean_ht = df$meanH[i],
+                   stand_top_ht = df$domH[i],
+                   stand_mean_dbh = df$Dg[i],
+                   stem_vol = df$V_m3[i],
+                   ci = "bal",
+                   ci_value = df$CI[i],
+                   full_output = 0)
   return(c(output$tree_id, output$u10_damage))
 }
 # damage(1, df)
@@ -117,8 +149,8 @@ df$cws_kmh <- df$cws * 3.6
 # i <- 100
 disturb <- function(i, df){
   stand <- df %>% filter(cws_kmh > i) %>% select(site, year, postThinning,
-                                         postDisturbance, species, D_cm,
-                                         H_m, V_m3, X, Y, weight)
+                                                 postDisturbance, species, D_cm,
+                                                 H_m, V_m3, X, Y, weight)
   return(stand)
 }
 # test <- disturb(100, df)
@@ -155,23 +187,17 @@ lapply(c(1:length(standList)), saveStands, standList)
 ###############################################################
 # check
 ###############################################################
-library(ggplot2)
 
-ggplot()+
-geom_bar(data = df[df$site == 27,], aes(x = D_cm, y = weight, fill = as.factor(species)), stat = 'identity') +
-geom_bar(data = stands75[stands75$site == 27,], aes(x = D_cm, y = weight), col = 'grey', fill = 'grey', stat = 'identity', width = 0.5) +
-facet_grid(as.factor(species) ~ site) +
-theme_light() +
-theme(legend.position = "bottom")
+ggplot() +
+  geom_bar(data = df[df$site == 9,], aes(x = D_cm, y = weight, fill = as.factor(species)), stat = 'identity') +
+  geom_bar(data = stands75[stands75$site == 9,], aes(x = D_cm, y = weight), col = 'grey', fill = 'grey', stat = 'identity', width = 0.5) +
+  facet_grid(as.factor(species) ~ site) +
+  theme_light() +
+  theme(legend.position = "bottom")
 
-
-ggplot()+
-geom_point(data = df, aes(x = D_cm, y = cws_kmh)) +
-geom_hline(yintercept = 75, col = 'red') +
-geom_hline(yintercept = 90, col = 'red') +
-geom_hline(yintercept = 100, col = 'red') +
-facet_wrap(. ~ site)
-
-
-
-# ----------> garder > ou < à cws ????
+ggplot() +
+  geom_point(data = df, aes(x = D_cm, y = cws_kmh)) +
+  geom_hline(yintercept = 75, col = 'red') +
+  geom_hline(yintercept = 90, col = 'red') +
+  geom_hline(yintercept = 100, col = 'red') +
+  facet_wrap(. ~ site)
