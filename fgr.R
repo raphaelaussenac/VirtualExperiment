@@ -11,6 +11,7 @@ rm(list = ls())
 library(fgr)
 library(dplyr)
 library(ggplot2)
+library(tidyr)
 
 # set work directory
 setwd("C:/Users/raphael.aussenac/Documents/GitHub/VirtualExperiment")
@@ -72,11 +73,11 @@ df <- df %>% group_by(site) %>%
                     spacing = sqrt(10000/N)) %>%
              ungroup()
 #
-# plot heights
-ggplot(data = df)+
-geom_boxplot(aes(x = as.factor(site), y = H_m)) +
-geom_point(aes(x = as.factor(site), y = meanH), col = 'green', size = 5) +
-geom_point(aes(x = as.factor(site), y = domH), col = 'orange', size = 5)
+# # plot heights
+# ggplot(data = df)+
+# geom_boxplot(aes(x = as.factor(site), y = H_m)) +
+# geom_point(aes(x = as.factor(site), y = meanH), col = 'green', size = 5) +
+# geom_point(aes(x = as.factor(site), y = domH), col = 'orange', size = 5)
 
 ###############################################################
 # calculate normalised BAl competition index
@@ -100,7 +101,7 @@ for(i in siteList){
 df$CI <- df$BAl / df$BAtot
 
 # remove useless columns
-df <- df %>% select(-BAtree, -BAtot, -Drank, -BAl)
+df <- df %>% select(-BAtot, -Drank, -BAl)
 
 # ---> envoyer sample à Barry ---------------------------------------------------------------
 # df <- df %>% select(site, tree, fgrSpCode, H_m, D_cm, weight, spacing, meanH, domH, Dg, V_m3, CI)
@@ -139,7 +140,60 @@ colnames(cws) <- c('tree', 'cws_ms')
 df <- merge(df, cws, by = 'tree', all.x = TRUE)
 df$cws_ms <- as.numeric(df$cws_ms)
 df$cws_kmh <- df$cws * 3.6
-# hist(df$cws_kmh)
+
+# plot cws values
+ggplot() +
+  geom_point(data = df, aes(x = D_cm, y = cws_kmh, col = latinName)) +
+  geom_hline(yintercept = 75, col = 'red') +
+  geom_hline(yintercept = 90, col = 'red') +
+  geom_hline(yintercept = 100, col = 'red') +
+  facet_wrap(. ~ site) +
+  theme_bw()
+
+# define all cws values for trees < 15cm to the max cws (within site and sp)
+df <- df %>% group_by(site, species) %>% mutate(cws_ms = ifelse(D_cm < 15, max(cws_ms[D_cm > 15]), cws_ms) ,
+                                                cws_kmh = ifelse(D_cm < 15, max(cws_kmh[D_cm > 15]), cws_kmh))
+#
+
+# plot cws values
+ggplot() +
+  geom_point(data = df, aes(x = D_cm, y = cws_kmh, col = latinName)) +
+  geom_hline(yintercept = 75, col = 'red') +
+  geom_hline(yintercept = 90, col = 'red') +
+  geom_hline(yintercept = 100, col = 'red') +
+  facet_wrap(. ~ site) +
+  theme_bw()
+
+###############################################################
+# choose wind speed modalities depending on wind damages
+###############################################################
+
+# calculate proportion of BA impacted by wind damages
+windDamages <- function(i, df){
+   damdf <- df %>% group_by(site) %>% summarise(BApre = sum(BAtree),
+                                              BApost = sum(BAtree[cws_kmh >= i])) %>%
+                                        mutate(damagedBA = 100 - (BApost * 100 / BApre)) %>%
+                                        select(damagedBA)
+  return(damdf)
+}
+# define storm wind speeds
+ws <- c(seq(70, 120, by = 2))
+damdf <- lapply(ws, windDamages, df)
+damSite <- data.frame(site = (1:nrow(damdf[[1]])))
+damdf <- as.data.frame(do.call(cbind, damdf))
+damdf <- cbind(damSite, damdf)
+colnames(damdf) <- c('site', paste0('ws', ws))
+damdf <- damdf %>% pivot_longer(cols = starts_with('ws'), names_to = 'ws',
+                                values_to = 'damagedBA', names_prefix = 'ws')
+damdf$ws <- as.numeric(damdf$ws)
+#
+
+# plot damaged BA = f(ws)
+ggplot(data = damdf) +
+geom_boxplot(aes(x = ws, y = damagedBA, group = ws), size = 1) +
+geom_point(aes(x = ws, y = damagedBA, col = as.factor(site)), size = 2) +
+geom_line(aes(x = ws, y = damagedBA, col = as.factor(site))) +
+theme_bw()
 
 ###############################################################
 # create disturbed stands
@@ -183,21 +237,14 @@ saveStands <- function(i, standList){
 # save
 lapply(c(1:length(standList)), saveStands, standList)
 
-
 ###############################################################
 # check
 ###############################################################
 
 ggplot() +
   geom_bar(data = df[df$site == 9,], aes(x = D_cm, y = weight, fill = as.factor(species)), stat = 'identity') +
-  geom_bar(data = stands75[stands75$site == 9,], aes(x = D_cm, y = weight), col = 'grey', fill = 'grey', stat = 'identity', width = 0.5) +
+  geom_bar(data = stands90[stands90$site == 9,], aes(x = D_cm, y = weight), col = 'grey', fill = 'grey', stat = 'identity', width = 0.5) +
+  geom_bar(data = stands100[stands100$site == 9,], aes(x = D_cm, y = weight), col = 'black', fill = 'black', stat = 'identity', width = 0.2) +
   facet_grid(as.factor(species) ~ site) +
   theme_light() +
   theme(legend.position = "bottom")
-
-ggplot() +
-  geom_point(data = df, aes(x = D_cm, y = cws_kmh)) +
-  geom_hline(yintercept = 75, col = 'red') +
-  geom_hline(yintercept = 90, col = 'red') +
-  geom_hline(yintercept = 100, col = 'red') +
-  facet_wrap(. ~ site)
