@@ -19,7 +19,7 @@ setwd("C:/Users/raphael.aussenac/Documents/GitHub/VirtualExperiment")
 # load pre-disturbance stands
 # define columns classes (because species = 2 or 02 causes problems)
 dfClass <- c('integer', 'integer', rep('character',3), rep('numeric',6))
-df <- read.csv('./data/salem/virtualExperiment_SALEM_02_2021.csv', colClasses = dfClass)
+df <- read.csv('./data/salem/virtualExperiment_WithoutPerturbation_SALEM_27_04_2021_40.csv', colClasses = dfClass)
 
 # load sp correspondance table
 spCorr <- read.csv('./data/spCodeCorrespond.csv')
@@ -103,6 +103,10 @@ df$CI <- df$BAl / df$BAtot
 # remove useless columns
 df <- df %>% select(-BAtot, -Drank, -BAl)
 
+# add soil group
+df$soil <- 1 # 1 = soil class A
+df$roots <- 2 # 2 = roots can penetrate to >=80 cm
+
 # ---> envoyer sample à Barry ---------------------------------------------------------------
 # df <- df %>% select(site, tree, fgrSpCode, H_m, D_cm, weight, spacing, meanH, domH, Dg, V_m3, CI)
 # write.csv(df, 'C:/Users/raphael.aussenac/Desktop/sample.csv', row.names = F)
@@ -126,6 +130,8 @@ damage <- function(i, df){
                    stem_vol = df$V_m3[i],
                    ci = "bal",
                    ci_value = df$CI[i],
+                   soil_group = df$soil[i],
+                   rooting = df$roots[i],
                    full_output = 0)
   return(c(output$tree_id, output$u10_damage))
 }
@@ -139,7 +145,7 @@ colnames(cws) <- c('tree', 'cws_ms')
 # add to df
 df <- merge(df, cws, by = 'tree', all.x = TRUE)
 df$cws_ms <- as.numeric(df$cws_ms)
-df$cws_kmh <- df$cws * 3.6
+df$cws_kmh <- df$cws_ms * 3.6
 
 # plot cws values
 ggplot() +
@@ -157,11 +163,11 @@ df <- df %>% group_by(site, species) %>% mutate(cws_ms = ifelse(D_cm < 15, max(c
 
 # plot cws values
 ggplot() +
-  geom_point(data = df, aes(x = D_cm, y = cws_kmh, col = latinName)) +
+  geom_point(data = df[df$site == 3,], aes(x = D_cm, y = cws_kmh, col = latinName)) +
   geom_hline(yintercept = 75, col = 'red') +
   geom_hline(yintercept = 90, col = 'red') +
   geom_hline(yintercept = 100, col = 'red') +
-  facet_wrap(. ~ site) +
+  # facet_wrap(. ~ site) +
   theme_bw()
 
 ###############################################################
@@ -177,7 +183,7 @@ windDamages <- function(i, df){
   return(damdf)
 }
 # define storm wind speeds
-ws <- c(seq(70, 120, by = 2))
+ws <- c(seq(50, 120, by = 2))
 damdf <- lapply(ws, windDamages, df)
 damSite <- data.frame(site = (1:nrow(damdf[[1]])))
 damdf <- as.data.frame(do.call(cbind, damdf))
@@ -242,9 +248,9 @@ lapply(c(1:length(standList)), saveStands, standList)
 ###############################################################
 
 ggplot() +
-  geom_bar(data = df[df$site == 9,], aes(x = D_cm, y = weight, fill = as.factor(species)), stat = 'identity') +
-  geom_bar(data = stands90[stands90$site == 9,], aes(x = D_cm, y = weight), col = 'grey', fill = 'grey', stat = 'identity', width = 0.5) +
-  geom_bar(data = stands100[stands100$site == 9,], aes(x = D_cm, y = weight), col = 'black', fill = 'black', stat = 'identity', width = 0.2) +
+  geom_bar(data = df[df$site == 22,], aes(x = D_cm, y = weight, fill = as.factor(species)), stat = 'identity') +
+  geom_bar(data = stands90[stands90$site == 22,], aes(x = D_cm, y = weight), col = 'grey', fill = 'grey', stat = 'identity', width = 0.5) +
+  geom_bar(data = stands100[stands100$site == 22,], aes(x = D_cm, y = weight), col = 'black', fill = 'black', stat = 'identity', width = 0.2) +
   facet_grid(as.factor(species) ~ site) +
   theme_light() +
   theme(legend.position = "bottom")
