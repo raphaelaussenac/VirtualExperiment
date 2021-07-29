@@ -155,10 +155,12 @@ ggplot() +
   geom_hline(yintercept = 100, col = 'red') +
   facet_wrap(. ~ site) +
   theme_bw()
+#
 
-# define all cws values for trees < 15cm to the max cws (within site and sp)
-df <- df %>% group_by(site, species) %>% mutate(cws_ms = ifelse(D_cm < 15, max(cws_ms[D_cm > 15]), cws_ms) ,
-                                                cws_kmh = ifelse(D_cm < 15, max(cws_kmh[D_cm > 15]), cws_kmh))
+# set cws of small trees to maximum cws of their sp
+df <- df %>% group_by(site, species) %>% mutate(D_cwsMax = max(ifelse(cws_ms == max(cws_ms), D_cm, NA), na.rm = TRUE),
+                                                cws_ms = ifelse(D_cm < D_cwsMax, max(cws_ms), cws_ms),
+                                                cws_kmh = ifelse(D_cm < D_cwsMax, max(cws_kmh), cws_kmh))
 #
 
 # plot cws values
