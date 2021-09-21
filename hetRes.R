@@ -6,8 +6,8 @@
 rm(list = ls())
 
 # load packages
-# require(devtools)
-# devtools::install_gitlab('arnaud.guyennon/forestdiversity', build_vignettes=TRUE)
+# library(devtools)
+# devtools::install_github('raphaelaussenac/forestdiversity', build_vignettes=TRUE)
 library(forestdiversity)
 library(dplyr)
 library(ggplot2)
