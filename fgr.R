@@ -17,42 +17,30 @@ library(tidyr)
 setwd("C:/Users/raphael.aussenac/Documents/GitHub/VirtualExperiment")
 
 # load pre-disturbance stands
-# define columns classes (because species = 2 or 02 causes problems)
-dfClass <- c('integer', 'integer', rep('character',3), rep('numeric',6))
-df <- read.csv('./data/salem/virtualExperiment_WithoutPerturbation_SALEM_27_04_2021_40.csv', colClasses = dfClass)
-
-# load sp correspondance table
-spCorr <- read.csv('./data/spCodeCorrespond.csv')
+df <- read.csv('./data/salem/VirtualExperiment_InitialStands_Salem_20_09_2021.csv', sep = ';')
+df$simID <- as.character(df$simID)
+df$species <- as.factor(df$species)
 
 # create correspondance between sp latin names and fgr sp codes
 # fgr::species_parameters
-fgrSpCode <- data.frame(latinName = c('Fagus sylvatica', 'Quercus petraea', 'Quercus robur', 'Abies alba', 'Picea abies', 'Pinus sylvestris'),
-                        fgrSpCode = c('BE', 'OK', 'OK', 'NF', 'NS', 'SP'))
+fgrSpCode <- data.frame(latinName = c('Fagus sylvatica', 'Quercus petraea', 'Picea abies', 'Pinus sylvestris'),
+                        fgrSpCode = c('BE', 'OK', 'NS', 'SP'),
+                        Imaestro = c('fasy', 'qupe', 'piab', 'pisy'))
 #
 
 ###############################################################
 # convert sp code and calculate stand level variables
 ###############################################################
 
-# keep only first site
-# df <- df %>% filter(site == 1) <------------------------------------------------
-
 # add tree id
 df$tree <- c(1:nrow(df))
-# keep only pre-disturbance year
-df <- df %>% filter(year == min(df$year), postDisturbance == 'false')
-# remove trees < 7.5 DBH
-df <- df %>% filter(D_cm>=7.5)
-
-# convert species codes into species latin name
-df <- merge(df, spCorr[!is.na(spCorr$franceCode), c('latinName', 'franceCode')], by.x = 'species', by.y = 'franceCode')
 
 # add a column with fgr species codes
-df <- merge(df, fgrSpCode, by = 'latinName')
+df <- merge(df, fgrSpCode, by.x = 'species', by.y = 'Imaestro', all.x = TRUE)
 
 # calculate stand level variables
 # first calculate dominant height = mean height of 100 trees with largest dbh
-df <- df %>% group_by(site) %>%
+df <- df %>% group_by(simID) %>%
              arrange(-D_cm) %>%
              mutate(Ncumul = cumsum(weight),
                     XX = Ncumul-100,
@@ -65,19 +53,13 @@ df <- df %>% group_by(site) %>%
              ungroup()
 #
 # then calculate other stand variables
-df <- df %>% group_by(site) %>%
+df <- df %>% group_by(simID) %>%
              mutate(N = sum(weight),
-                    # meanDBH = sum(D_cm * weight) / sum(weight),  # arithmetic mean
                     Dg = sqrt(sum(D_cm^2 * weight)/sum(weight)),   # quadratic mean
                     meanH = sum(H_m * weight) / sum(weight),
                     spacing = sqrt(10000/N)) %>%
              ungroup()
 #
-# # plot heights
-# ggplot(data = df)+
-# geom_boxplot(aes(x = as.factor(site), y = H_m)) +
-# geom_point(aes(x = as.factor(site), y = meanH), col = 'green', size = 5) +
-# geom_point(aes(x = as.factor(site), y = domH), col = 'orange', size = 5)
 
 ###############################################################
 # calculate normalised BAl competition index
@@ -85,17 +67,17 @@ df <- df %>% group_by(site) %>%
 
 # calculate tree and stand BA
 df <- df %>% mutate(BAtree = (pi * (df$D_cm/200)^2) * df$weight) %>%
-             group_by(site) %>% mutate(BAtot = sum((pi * (D_cm/200)^2) * weight)) %>%
+             group_by(simID) %>% mutate(BAtot = sum((pi * (D_cm/200)^2) * weight)) %>%
              ungroup()
 #
 # assign to each tree the ratio of "BA of larger trees" / BAtot
-df <- df %>% arrange(-D_cm) %>% mutate(Drank = 1:nrow(df)) %>% group_by(site) %>%
+df <- df %>% arrange(-D_cm) %>% mutate(Drank = 1:nrow(df)) %>% group_by(simID) %>%
              mutate(BAl = cumsum(BAtree))
 # shift column BAl down by one row
-siteList <- sort(unique(df$site))
+siteList <- sort(unique(df$simID))
 for(i in siteList){
-  a <- as.data.frame(df[df$site == i, 'BAl'][1:(nrow(df[df$site == i, 'BAl'])-1),])
-  df[df$site == i, 'BAl'] <- c(0, a$BAl)
+  a <- as.data.frame(df[df$simID == i, 'BAl'][1:(nrow(df[df$simID == i, 'BAl'])-1),])
+  df[df$simID == i, 'BAl'] <- c(0, a$BAl)
 }
 # competition index
 df$CI <- df$BAl / df$BAtot
@@ -107,18 +89,14 @@ df <- df %>% select(-BAtot, -Drank, -BAl)
 df$soil <- 1 # 1 = soil class A
 df$roots <- 2 # 2 = roots can penetrate to >=80 cm
 
-# ---> envoyer sample à Barry ---------------------------------------------------------------
-# df <- df %>% select(site, tree, fgrSpCode, H_m, D_cm, weight, spacing, meanH, domH, Dg, V_m3, CI)
-# write.csv(df, 'C:/Users/raphael.aussenac/Desktop/sample.csv', row.names = F)
 
 ###############################################################
 # calculate critical wind speed cws for all trees
 ###############################################################
 
 # single tree calculation
-# i <- 1
 damage <- function(i, df){
-  output <- fg_tmc(stand_id = as.character(df$site[i]),
+  output <- fg_tmc(stand_id = as.character(df$simID[i]),
                    tree_id = as.character(df$tree[i]),
                    species = df$fgrSpCode[i],
                    tree_ht = df$H_m[i],
@@ -135,41 +113,42 @@ damage <- function(i, df){
                    full_output = 0)
   return(c(output$tree_id, output$u10_damage))
 }
-# damage(1, df)
+
+# temporarily remove trees < 7.5 cm (forestGales does not accept them)
+df75 <- df %>% filter(D_cm >= 7.5)
 
 # vectorise for multiple stands and trees
-cws <- lapply(c(1:nrow(df)), damage, df)
+start_time <- Sys.time()
+cws <- lapply(c(1:nrow(df75)), damage, df75)
 cws <- data.frame(matrix(unlist(cws), nrow=length(cws), byrow=TRUE))
 colnames(cws) <- c('tree', 'cws_ms')
+end_time <- Sys.time()
+end_time - start_time
 
 # add to df
 df <- merge(df, cws, by = 'tree', all.x = TRUE)
 df$cws_ms <- as.numeric(df$cws_ms)
 df$cws_kmh <- df$cws_ms * 3.6
 
-# plot cws values
-ggplot() +
-  geom_point(data = df, aes(x = D_cm, y = cws_kmh, col = latinName)) +
-  geom_hline(yintercept = 75, col = 'red') +
-  geom_hline(yintercept = 90, col = 'red') +
-  geom_hline(yintercept = 100, col = 'red') +
-  facet_wrap(. ~ site) +
-  theme_bw()
-#
-
 # set cws of small trees to maximum cws of their sp
-df <- df %>% group_by(site, species) %>% mutate(D_cwsMax = max(ifelse(cws_ms == max(cws_ms), D_cm, NA), na.rm = TRUE),
-                                                cws_ms = ifelse(D_cm < D_cwsMax, max(cws_ms), cws_ms),
-                                                cws_kmh = ifelse(D_cm < D_cwsMax, max(cws_kmh), cws_kmh))
+# first assign max cws to trees < 7.5cm
+df <- df %>% group_by(simID, species) %>% mutate(cws_ms = ifelse(is.na(cws_ms), max(cws_ms, na.rm = TRUE), cws_ms),
+                                                 cws_kmh = ifelse(is.na(cws_kmh), max(cws_kmh, na.rm = TRUE), cws_kmh))
+# then for the remaining 'small trees'
+df <- df %>% group_by(simID, species) %>% mutate(D_cwsMax = max(ifelse(cws_ms == max(cws_ms), D_cm, NA), na.rm = TRUE),
+                                                cws_ms = ifelse(D_cm <= D_cwsMax, max(cws_ms), cws_ms),
+                                                cws_kmh = ifelse(D_cm <= D_cwsMax, max(cws_kmh), cws_kmh))
 #
+
+# TODO: save after forestGales (in temp file?)
 
 # plot cws values
 ggplot() +
-  geom_point(data = df[df$site == 3,], aes(x = D_cm, y = cws_kmh, col = latinName)) +
+  geom_point(data = df[df$simID %in% unique(df$simID)[1:12],], aes(x = D_cm, y = cws_kmh, col = latinName)) +
   geom_hline(yintercept = 75, col = 'red') +
-  geom_hline(yintercept = 90, col = 'red') +
-  geom_hline(yintercept = 100, col = 'red') +
-  # facet_wrap(. ~ site) +
+  geom_hline(yintercept = 80, col = 'red') +
+  geom_hline(yintercept = 85, col = 'red') +
+  facet_wrap(. ~ simID) +
   theme_bw()
 
 ###############################################################
@@ -178,81 +157,97 @@ ggplot() +
 
 # calculate proportion of BA impacted by wind damages
 windDamages <- function(i, df){
-   damdf <- df %>% group_by(site) %>% summarise(BApre = sum(BAtree),
+   damdf <- df %>% group_by(simID) %>% summarise(BApre = sum(BAtree),
                                               BApost = sum(BAtree[cws_kmh >= i])) %>%
                                         mutate(damagedBA = 100 - (BApost * 100 / BApre)) %>%
                                         select(damagedBA)
   return(damdf)
 }
 # define storm wind speeds
-ws <- c(seq(50, 120, by = 2))
+ws <- c(seq(50, 120, by = 5))
 damdf <- lapply(ws, windDamages, df)
-damSite <- data.frame(site = (1:nrow(damdf[[1]])))
+damSite <- data.frame(simID = (1:nrow(damdf[[1]])))
 damdf <- as.data.frame(do.call(cbind, damdf))
 damdf <- cbind(damSite, damdf)
-colnames(damdf) <- c('site', paste0('ws', ws))
+colnames(damdf) <- c('simID', paste0('ws', ws))
 damdf <- damdf %>% pivot_longer(cols = starts_with('ws'), names_to = 'ws',
                                 values_to = 'damagedBA', names_prefix = 'ws')
 damdf$ws <- as.numeric(damdf$ws)
 #
 
 # plot damaged BA = f(ws)
-ggplot(data = damdf) +
-geom_boxplot(aes(x = ws, y = damagedBA, group = ws), size = 1) +
-geom_point(aes(x = ws, y = damagedBA, col = as.factor(site)), size = 2) +
-geom_line(aes(x = ws, y = damagedBA, col = as.factor(site))) +
-theme_bw()
+pl1 <- ggplot(data = damdf) +
+geom_boxplot(aes(x = ws, y = damagedBA, group = ws), size = 2) +
+# geom_point(aes(x = ws, y = damagedBA, group = as.factor(simID)), size = 2, alpha = 0.2) +
+geom_line(aes(x = ws, y = damagedBA, col = as.factor(simID)), alpha = 0.1) +
+theme(panel.grid.major = element_line(colour = "black"),
+  panel.grid.minor = element_line(colour = "black", size = 0.25),
+  legend.position = "none") +
+scale_y_continuous(minor_breaks = seq(0 , 100, 5), breaks = seq(0, 100, 10)) +
+scale_x_continuous(minor_breaks = seq(50 , 120, 5), breaks = seq(50, 120, 5))
+pl1
+# save plot
+ggsave(file = './disturbedStands/wsDamages.pdf', plot = pl1, width = 10, height = 10)
 
 ###############################################################
 # create disturbed stands
 ###############################################################
 
 # function to create disturbed stands
-# i <- 100
 disturb <- function(i, df){
-  stand <- df %>% filter(cws_kmh > i) %>% select(site, year, postThinning,
-                                                 postDisturbance, species, D_cm,
-                                                 H_m, V_m3, X, Y, weight)
+  # deduce ws modality index (used in simulation codes)
+  index <- match(i, ws)
+  # remove trees depending in their critical ws
+  stand <- df %>% filter(cws_kmh > i) %>%
+                  select(simID, year, postThinning,
+                         postDisturbance, species, D_cm,
+                         H_m, V_m3, weight, comment) %>%
+                  mutate(simID = paste0('W', index, '-', simID))
   return(stand)
 }
-# test <- disturb(100, df)
 
 # define storm wind speed
-ws <- c(75, 90, 100)
+ws <- c(75, 80, 85)
 disturbedStands <- lapply(ws, disturb, df)
-
-# function to assign name to disturbed stands (with the associated ws)
-disturbedStandName <- function(i, disturbedStands, ws){
-  assign(x = paste0('stands', ws[i]), value = as.data.frame(disturbedStands[i]), envir = .GlobalEnv)
-  return()
-}
-# run the function
-lapply(c(1:length(ws)), disturbedStandName, disturbedStands, ws)
-
-###############################################################
-# save disturbed stands
-###############################################################
-
-# create directory to save disturbed stands
-if (!(dir.exists('disturbedStands'))){dir.create('disturbedStands', recursive = TRUE)}
-
-# function to save disturbed stands in csv files
-standList <- ls(pattern = "stands")
-saveStands <- function(i, standList){
-  write.csv(get(standList[i]), paste0('./disturbedStands/', standList[i], '.csv'), row.names = FALSE)
-}
+disturbedStands <- bind_rows(disturbedStands)
 
 # save
-lapply(c(1:length(standList)), saveStands, standList)
+disturbedStands$postDisturbance <- 'true'
+write.csv(disturbedStands, paste0('./disturbedStands/salem.csv'), row.names = FALSE)
 
 ###############################################################
-# check
+# evaluation
 ###############################################################
+
+# calculate stand BA
+ba <- disturbedStands %>% group_by(simID) %>%
+                          summarise(BA = sum((pi * (D_cm/200)^2) * weight)) %>%
+                          mutate(ws = ifelse(substr(simID, 1, 2) =='W1', ws[1], ifelse(substr(simID, 1, 2) =='W2', ws[2], ws[3])))
+#
+# plot BA of disturbed stands depending on their associated ws
+pl2 <- ggplot() +
+geom_boxplot(data = ba, aes(x = ws, y = BA, group = ws)) +
+theme_bw() +
+scale_x_continuous(minor_breaks = seq(70 , 90, 5), breaks = seq(70, 90, 5))
+pl2
+# save plot
+ggsave(file = './disturbedStands/BA.pdf', plot = pl2, width = 10, height = 10)
+
+
+#
+# --------------> dbh avant/apres
+#
+# disturbedStands <- disturbedStands %>% group_by(simID) %>%
+#                             mutate(ws = ifelse(substr(simID, 1, 2) =='W1', ws[1], ifelse(substr(simID, 1, 2) =='W2', ws[2], ws[3])))
+# #
+#
+# ggplot(disturbedStands[disturbedStands$D_cm <= 15, ]) +
+#   geom_histogram(aes(x = D_cm), binwidth = 1) +
+#   facet_wrap(. ~ ws)
+
+
 
 ggplot() +
-  geom_bar(data = df[df$site == 22,], aes(x = D_cm, y = weight, fill = as.factor(species)), stat = 'identity') +
-  geom_bar(data = stands90[stands90$site == 22,], aes(x = D_cm, y = weight), col = 'grey', fill = 'grey', stat = 'identity', width = 0.5) +
-  geom_bar(data = stands100[stands100$site == 22,], aes(x = D_cm, y = weight), col = 'black', fill = 'black', stat = 'identity', width = 0.2) +
-  facet_grid(as.factor(species) ~ site) +
-  theme_light() +
-  theme(legend.position = "bottom")
+  geom_histogram(data = df, aes(x = D_cm)) +
+  geom_histogram(data = disturbedStands, aes(x = D_cm), fill = 'orange', alpha = 0.2) +
+  facet_wrap(. ~ ws)
