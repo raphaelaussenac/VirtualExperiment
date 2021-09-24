@@ -10,6 +10,7 @@ cws <- function(model){
   require(dplyr)
   require(ggplot2)
   require(tidyr)
+  require(doParallel)
 
   # load pre-disturbance stands
   initPath <- paste0('./data/', model, '/init/')
@@ -19,10 +20,6 @@ cws <- function(model){
   df$species <- as.factor(df$species)
   # add tree id
   df$tree <- c(1:nrow(df))
-
-
-
-  df <- df[df$simID %in% unique(df$simID)[1:12],]
 
 
   ###############################################################
@@ -121,10 +118,17 @@ cws <- function(model){
   # temporarily remove trees < 7.5 cm (forestGales does not accept them)
   df75 <- df %>% filter(D_cm >= 7.5)
 
-  # vectorise for multiple stands and trees
-  cws <- lapply(c(1:nrow(df75)), damage, df75)
-  cws <- data.frame(matrix(unlist(cws), nrow=length(cws), byrow=TRUE))
+  # calculate cws for all trees
+  cl <- makeCluster(8)
+  registerDoParallel(cl)
+  cws <- foreach(i = c(1:nrow(df75)), .combine = 'rbind', .packages = 'fgr') %dopar% {damage(i = i, df = df75)}
+  stopCluster(cl)
   colnames(cws) <- c('tree', 'cws_ms')
+
+  # # vectorise for multiple stands and trees
+  # cws <- lapply(c(1:nrow(df75)), damage, df75)
+  # cws <- data.frame(matrix(unlist(cws), nrow=length(cws), byrow=TRUE))
+  # colnames(cws) <- c('tree', 'cws_ms')
 
   # add to df
   df <- merge(df, cws, by = 'tree', all.x = TRUE)

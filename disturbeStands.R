@@ -42,10 +42,7 @@ cws(model)
 # calculate BA damages depending on wind speed
 wsDamages()
 
-###############################################################
 # set [w]ind [s]peed
-###############################################################
-
 ws <- c(75, 80, 85)
 
 # create disturbed stands
