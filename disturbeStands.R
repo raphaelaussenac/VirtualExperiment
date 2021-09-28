@@ -12,6 +12,7 @@ setwd("C:/Users/raphael.aussenac/Documents/GitHub/VirtualExperiment")
 source('./R/cws.R')
 source('./R/wsDamages.R')
 source('./R/disturbe.R')
+source('./R/hetRes.R')
 
 ###############################################################
 # select model (salem, ...)
@@ -47,6 +48,9 @@ ws <- c(75, 80, 85)
 
 # create disturbed stands
 disturbe(ws)
+
+# calculate heterogeneity and resilience metrics
+hetRes(model)
 
 # running time
 end_time <- Sys.time()
