@@ -34,7 +34,7 @@ disturbe <- function(ws){
 
   # save
   disturbed$postDisturbance <- 'true'
-  write.csv(disturbed, paste0(modPath, '/salemDisturbed.csv'), row.names = FALSE)
+  write.csv(disturbed, paste0(modPath, '/', model, 'Disturbed.csv'), row.names = FALSE)
 
   ###############################################################
   # evaluation

@@ -13,7 +13,11 @@ cws <- function(model){
   require(doParallel)
 
   # load pre-disturbance stands
-  initPath <- paste0('./data/', model, '/init/')
+  if(model == 'salem'){
+    initPath <- paste0('./data/init/', model, '/')
+  } else {
+    initPath <- paste0('./data/init/otherModels/')
+  }
   csvFile <- list.files(path = initPath, pattern = '\\.csv$')
   df <- read.csv(paste0(initPath, csvFile), sep = ';')
   df$simID <- as.character(df$simID)

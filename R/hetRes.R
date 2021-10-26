@@ -6,7 +6,7 @@ hetRes <- function(model){
 
   # load packages
   # library(devtools)
-  # devtools::install_github('raphaelaussenac/forestdiversity', build_vignettes=TRUE)
+  # devtools::install_gitlab('arnaud.guyennon/forestdiversity', build_vignettes=TRUE)
   require(forestdiversity)
   require(dplyr)
   require(ggplot2)
@@ -14,11 +14,15 @@ hetRes <- function(model){
   require(doParallel)
 
   # load init data
-  initPath <- paste0('./data/', model, '/init/')
+  if(model == 'salem'){
+    initPath <- paste0('./data/init/', model, '/')
+  } else {
+    initPath <- paste0('./data/init/otherModels/')
+  }
   csvFile <- list.files(path = initPath, pattern = '\\.csv$')
   init <- read.csv(paste0(initPath, csvFile), sep = ';')
   # duplicate init stands (without W modalities) and add W1, W2 and W3 to simIDs
-  nrowInit <-  nrow(init)
+  nrowInit <- nrow(init)
   init <- rbind(init, init, init)
   init$simID <- paste0(c(rep('W1-', nrowInit), rep('W2-', nrowInit), rep('W3-', nrowInit)), init$simID)
 
@@ -26,7 +30,7 @@ hetRes <- function(model){
   dist <- read.csv(paste0(modPath, '/', model, 'Disturbed.csv'))
 
   # retrieve list of simulation files
-  simPath <- paste0('./data/', model, '/sim')
+  simPath <- paste0('./data/sim/', model, '/')
   simList <- list.files(path = simPath, pattern = '\\.csv$')
 
   # species code correspondence

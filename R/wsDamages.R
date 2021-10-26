@@ -5,7 +5,7 @@ wsDamages <- function(){
   ###############################################################
 
   # load packages
-  require(dplyr)
+  require(tidyverse)
   require(ggplot2)
 
   # load critical wind speed data
