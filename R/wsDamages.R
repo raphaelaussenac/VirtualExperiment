@@ -1,4 +1,4 @@
-wsDamages <- function(){
+wsDamages <- function(method, thresholds){
 
   ###############################################################
   # initialisation
@@ -25,7 +25,7 @@ wsDamages <- function(){
     return(damdf)
   }
   # define storm wind speeds
-  ws <- c(seq(50, 120, by = 5))
+  ws <- c(seq(50, 100, by = 1))
   damdf <- lapply(ws, windDamages, df)
   damSite <- data.frame(simID = (1:nrow(damdf[[1]])))
   damdf <- as.data.frame(do.call(cbind, damdf))
@@ -34,20 +34,40 @@ wsDamages <- function(){
   damdf <- damdf %>% pivot_longer(cols = starts_with('ws'), names_to = 'ws',
                                   values_to = 'damagedBA', names_prefix = 'ws')
   damdf$ws <- as.numeric(damdf$ws)
-  #
+
+  # thresholds
+  if(method == 'ws'){
+    damdfThresholds <- damdf %>% filter(ws %in% thresholds)
+  } else if(method == "dBA"){
+    thresh <- damdf %>% group_by(ws) %>% summarise(median = median(damagedBA)) %>%
+                                         mutate(thresh1 = abs(median-thresholds[1]),
+                                                thresh2 = abs(median-thresholds[2]),
+                                                thresh3 = abs(median-thresholds[3]))
+    thresh1 <- as.numeric(thresh %>% filter(thresh1 == min(thresh1)) %>% summarise(ws))
+    thresh2 <- as.numeric(thresh %>% filter(thresh2 == min(thresh2)) %>% summarise(ws))
+    thresh3 <- as.numeric(thresh %>% filter(thresh3 == min(thresh3)) %>% summarise(ws))
+    damdfThresholds <- damdf %>% filter(ws %in% c(thresh1, thresh2, thresh3))
+  }
 
   # plot damaged BA = f(ws)
-  pl1 <- ggplot(data = damdf) +
-  geom_boxplot(aes(x = ws, y = damagedBA, group = ws), size = 2) +
-  # geom_point(aes(x = ws, y = damagedBA, group = as.factor(simID)), size = 2, alpha = 0.2) +
-  geom_line(aes(x = ws, y = damagedBA, col = as.factor(simID)), alpha = 0.1) +
-  theme(panel.grid.major = element_line(colour = "black"),
-    panel.grid.minor = element_line(colour = "black", size = 0.25),
-    legend.position = "none") +
+  pl1 <- ggplot() +
+  geom_boxplot(data = damdf, aes(x = ws, y = damagedBA, group = ws), fill = 'grey', width = 0.8) +
+  geom_boxplot(data = damdfThresholds, aes(x = ws, y = damagedBA, group = ws), col = 'red', fill = 'pink', width = 0.8) +
+  theme_light() +
+  theme(legend.position = "none") +
   scale_y_continuous(minor_breaks = seq(0 , 100, 5), breaks = seq(0, 100, 10)) +
   scale_x_continuous(minor_breaks = seq(50 , 120, 5), breaks = seq(50, 120, 5))
   pl1
+
   # save plot
-  ggsave(file = paste0(evalPath, '/wsDamages.pdf'), plot = pl1, width = 10, height = 10)
+  ggsave(file = paste0(evalPath, '/wsDamages.pdf'), plot = pl1, width = 15, height = 10)
+
+  # save wind speed modalities
+  if(method == 'ws'){
+    ws <- thresholds
+  } else if(method == 'dBA'){
+    ws <- c(thresh1, thresh2, thresh3)
+  }
+  saveRDS(ws , paste0(tempPath, '/ws.rds'))
 
 }

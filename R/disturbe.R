@@ -1,4 +1,4 @@
-disturbe <- function(ws){
+disturbe <- function(){
 
   ###############################################################
   # initialisation
@@ -10,6 +10,9 @@ disturbe <- function(ws){
 
   # load critical wind speed data
   df <- readRDS(paste0(tempPath, '/cws.rds'))
+
+  # load ws modalities
+  ws <- readRDS(paste0(tempPath, '/ws.rds'))
 
   ###############################################################
   # create disturbed stands
@@ -51,7 +54,7 @@ disturbe <- function(ws){
   geom_boxplot(data = ba, aes(x = ws, y = BA, group = ws)) +
   ylab('post-dist BA') +
   theme_bw() +
-  scale_x_continuous(minor_breaks = seq(70 , 90, 5), breaks = seq(70, 90, 5))
+  scale_x_continuous(minor_breaks = seq(55, 90, 5), breaks = seq(55, 90, 5))
   pl1
   # save plot
   ggsave(file = paste0(evalPath, '/postDistBA.pdf'), plot = pl1, width = 10, height = 10)

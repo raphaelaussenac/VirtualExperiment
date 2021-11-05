@@ -21,7 +21,7 @@ source('./R/hetRes.R')
 model <- 'salem'
 
 ###############################################################
-# disturbe stands
+# create file architecture
 ###############################################################
 
 # running time
@@ -37,20 +37,36 @@ if (!(dir.exists(tempPath))) {dir.create(tempPath, recursive = TRUE)}
 if (!(dir.exists(modPath))) {dir.create(modPath, recursive = TRUE)}
 if (!(dir.exists(evalPath))) {dir.create(evalPath, recursive = TRUE)}
 
-# calculate [c]ritical [w]ind [s]peed
+###############################################################
+# calculate tree [c]ritical [w]ind [s]peed
+###############################################################
+
 cws(model)
 
-# calculate BA damages depending on wind speed
-wsDamages()
+###############################################################
+# disturb stands
+###############################################################
 
+# define wind speed modalities or percentage of damaged BA
 # set [w]ind [s]peed
 ws <- c(75, 80, 85)
+# set percentage of [d]amaged [BA]
+dBA <- c(25, 50, 75)
+
+# plot damaged BA = f(wind speed)
+wsDamages(method = 'dBA', thresholds = dBA)
 
 # create disturbed stands
-disturbe(ws)
+disturbe()
+
+###############################################################
+# calculate resilience metrics
+###############################################################
 
 # calculate heterogeneity and resilience metrics
 hetRes(model)
+
+#evalHetRes
 
 # running time
 end_time <- Sys.time()
