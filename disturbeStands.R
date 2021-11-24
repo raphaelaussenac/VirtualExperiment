@@ -13,6 +13,7 @@ source('./R/cws.R')
 source('./R/wsDamages.R')
 source('./R/disturbe.R')
 source('./R/hetRes.R')
+source('./R/evalHetRes.R')
 
 ###############################################################
 # select model (salem, ...)
@@ -63,10 +64,11 @@ disturbe()
 # calculate resilience metrics
 ###############################################################
 
-# calculate heterogeneity and resilience metrics
+# calculate complexity and resilience metrics
 hetRes(model)
 
-#evalHetRes
+# plot complexity and resilience relationship
+evalHetRes()
 
 # running time
 end_time <- Sys.time()
