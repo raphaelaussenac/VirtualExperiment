@@ -27,7 +27,8 @@ hetRes <- function(model){
   init$simID <- paste0(c(rep('W1-', nrowInit), rep('W2-', nrowInit), rep('W3-', nrowInit)), init$simID)
 
   # load disturbed data
-  dist <- read.csv(paste0(modPath, '/', model, 'Disturbed.csv'))
+  csvFile <- list.files(path = modPath, pattern = '\\.csv$')
+  dist <- read.csv(paste0(modPath, '/', csvFile))
 
   # retrieve list of simulation files
   simPath <- paste0('./data/sim/', model, '/')
@@ -36,11 +37,22 @@ hetRes <- function(model){
   # species code correspondence
   spCor <- data.frame(spSalem = c(9, 3, 52, 62), species = c('fasy', 'qupe', 'pisy', 'piab'))
 
+
+#   # TODO: checker le nombre de init / dist / sim
+  length(unique(init$simID))
+  length(unique(dist$simID))
+  length(simList)
+#   # TODO: que se passe-t-il quand il n'y a pas de dist?
+#   unique(init$simID)[!(unique(init$simID) %in% unique(dist$simID))]
+#   i <- "samsaraPostDist_Reformated_Disturbed_W1-CL1-CD1-G1-D1.csv"
+#
+# ---> ajouter un warning
+
   # recdf <- data.frame()
   hetResMet <- function(i, simPath, init, dist, sim, spCor){
     # load sim data
     sim <- read.csv(paste0(simPath, '/', i), sep = ';')
-    ID <- unique(sim$simID)
+    ID <- sim$simID[1]
     # rbind init, dist and sim
     df <- rbind(init[init$simID == ID,], dist[dist$simID == ID,], sim)
     # format sim
@@ -56,7 +68,7 @@ hetRes <- function(model){
                    relocate(c(X,Y), .after = V_m3)
     #
     # format function from 'forestdiversity'
-    df2 <- format_salem(df, Out = 'HillNb')
+    df2 <- format_salem(df, Out = 'HillNb', ClassIni = 7.5) #TODO: define ClassIni = 0?
     # plot(df2, Nvar='V_m3', RecTime=20, normalize='baseline')
 
     # recovery metrics
@@ -67,17 +79,9 @@ hetRes <- function(model){
 
   }
 
-  # start_time <- Sys.time()
-  # df <- lapply(simList, hetResMet, simPath, init, dist, sim, spCor)
-  # nameList <- names(df[[1]])
-  # df <- data.frame(matrix(unlist(df), nrow = length(df), byrow = TRUE))
-  # colnames(df) <- nameList
-  # end_time <- Sys.time()
-  # end_time - start_time
-
   # run calculation in parallel
   start_time <- Sys.time()
-  cl <- makeCluster(8)
+  cl <- makeCluster(5)
   registerDoParallel(cl)
   df <- foreach(i = simList, .combine = 'rbind', .packages = c('forestdiversity', 'dplyr')) %dopar% {hetResMet(i = i, simPath = simPath, init = init, dist = dist, sim = sim, spCor = spCor)}
   stopCluster(cl)

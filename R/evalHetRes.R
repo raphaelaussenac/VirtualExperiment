@@ -34,71 +34,82 @@ evalHetRes <- function(){
 
   # recovery distribution
   pl1 <- ggplot(data = df) +
-  geom_histogram(aes(x = DegreeRecovery)) +
-  theme_bw()
-  ggsave(file = paste0(evalPath, '/resilience.pdf'), plot = pl1, width = 10, height = 10)
+  geom_histogram(aes(x = DegreeRecovery), bins = 100) +
+  theme_bw() #+
+  # ylim(0,2.1)
+  ggsave(file = paste0(evalPath, '/resilience.jpg'), plot = pl1, width = 10, height = 10)
 
   # wind speed
   pl2 <- ggplot(data = df, aes(x = ws, y = DegreeRecovery)) +
   geom_boxplot() +
   stat_summary(fun = mean, geom = 'point', shape = 20, size = 5, color = 'red', fill = 'red') +
-  theme_bw()
-  ggsave(file = paste0(evalPath, '/effectWS.pdf'), plot = pl2, width = 10, height = 10)
+  theme_bw() #+
+  # ylim(0,2.1)
+  ggsave(file = paste0(evalPath, '/effectWS.jpg'), plot = pl2, width = 10, height = 10)
 
   # climate
   pl3 <- ggplot(data = df, aes(x = cl, y = DegreeRecovery)) +
   geom_boxplot() +
   stat_summary(fun = mean, geom = 'point', shape = 20, size = 5, color = 'red', fill = 'red') +
-  theme_bw()
-  ggsave(file = paste0(evalPath, '/effectCL.pdf'), plot = pl3, width = 10, height = 10)
+  theme_bw() #+
+  # ylim(0,2.1)
+  ggsave(file = paste0(evalPath, '/effectCL.jpg'), plot = pl3, width = 10, height = 10)
 
   # composition
   pl4 <- ggplot(data = df, aes(x = reorder(cd,-DegreeRecovery, na.rm = TRUE), y = DegreeRecovery, -cd, na.rm = TRUE)) +
   geom_boxplot() +
   stat_summary(fun = mean, geom = 'point', shape = 20, size = 5, color = 'red', fill = 'red') +
-  theme_bw()
-  ggsave(file = paste0(evalPath, '/effectCD.pdf'), plot = pl4, width = 10, height = 10)
+  theme_bw() #+
+  # ylim(0,2.1)
+  ggsave(file = paste0(evalPath, '/effectCD.jpg'), plot = pl4, width = 10, height = 10)
 
   # gini
   pl5 <- ggplot(data = df, aes(x = gi, y = DegreeRecovery, -cd, na.rm = TRUE)) +
   geom_boxplot() +
   stat_summary(fun = mean, geom = 'point', shape = 20, size = 5, color = 'red', fill = 'red') +
-  theme_bw()
-  ggsave(file = paste0(evalPath, '/effectGI.pdf'), plot = pl5, width = 10, height = 10)
+  theme_bw() #+
+  # ylim(0,2.1)
+  ggsave(file = paste0(evalPath, '/effectGI.jpg'), plot = pl5, width = 10, height = 10)
 
   # dg
   pl6 <- ggplot(data = df, aes(x = dg, y = DegreeRecovery, -cd, na.rm = TRUE)) +
   geom_boxplot() +
   stat_summary(fun = mean, geom = 'point', shape = 20, size = 5, color = 'red', fill = 'red') +
-  theme_bw()
-  ggsave(file = paste0(evalPath, '/effectDg.pdf'), plot = pl6, width = 10, height = 10)
+  theme_bw() #+
+  # ylim(0,2.1)
+  ggsave(file = paste0(evalPath, '/effectDg.jpg'), plot = pl6, width = 10, height = 10)
 
   # sp richness
   pl7 <- ggplot(data = df, aes(x = as.factor(NclassSpini), y = DegreeRecovery)) +
   geom_boxplot() +
   stat_summary(fun = mean, geom = 'point', shape = 20, size = 5, color = 'red', fill = 'red') +
-  theme_bw()
-  ggsave(file = paste0(evalPath, '/effectDI.pdf'), plot = pl7, width = 10, height = 10)
+  theme_bw() #+
+  # ylim(0,2.1)
+  ggsave(file = paste0(evalPath, '/effectDI.jpg'), plot = pl7, width = 10, height = 10)
 
   # recovery = f(gini, by dg, ws and cl)
   pl8 <- ggplot(data = df2, aes(x = gi, y = DegreeRecovery)) +
   geom_boxplot(aes(fill = climate)) +
+  # geom_boxplot() +
   scale_fill_manual(values = c('chartreuse2', 'orangered', 'turquoise1', 'darkorchid2')) +
   stat_summary(fun = mean, geom = 'point', shape = 19, size = 5, col = 'black') +
   facet_wrap(dg~ws, nrow = 1) +
   theme_bw() +
-  theme(strip.background = element_rect(colour = 'black', fill = 'white'), legend.position = 'bottom')
-  ggsave(file = paste0(evalPath, '/interactionsCL.pdf'), plot = pl8, width = 10, height = 10)
+  theme(strip.background = element_rect(colour = 'black', fill = 'white'), legend.position = 'bottom') #+
+  # ylim(0,2.1)
+  ggsave(file = paste0(evalPath, '/interactionsCL.jpg'), plot = pl8, width = 10, height = 10)
 
   # recovery = f(gini, by dg, ws and sp richness)
   pl9 <- ggplot(data = df2, aes(x = NclassSpini, y = DegreeRecovery)) +
   geom_boxplot(aes(fill = gi)) +
+  # geom_boxplot() +
   stat_summary(fun = mean, geom = 'point', shape = 19, size = 5, col = 'black') +
   facet_wrap(dg~ws, nrow = 1) +
   theme_bw() +
-  theme(strip.background = element_rect(colour = 'black', fill = 'white'), legend.position = 'bottom') +
-  scale_fill_discrete(name = "species richness")
-  ggsave(file = paste0(evalPath, '/interactionsDI.pdf'), plot = pl9, width = 10, height = 10)
+  theme(strip.background = element_rect(colour = 'black', fill = 'white'), legend.position = 'none') +
+  scale_fill_discrete(name = "gini indices") #+
+  # ylim(0,2.1)
+  ggsave(file = paste0(evalPath, '/interactionsDI.jpg'), plot = pl9, width = 10, height = 10)
 
 
 }

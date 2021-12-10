@@ -19,14 +19,11 @@ source('./R/evalHetRes.R')
 # select model (salem, ...)
 ###############################################################
 
-model <- 'salem'
+model <- 'landclim'
 
 ###############################################################
 # create file architecture
 ###############################################################
-
-# running time
-start_time <- Sys.time()
 
 # define folder structure
 tempPath <- paste0('./data/temp/', model)
@@ -69,7 +66,3 @@ hetRes(model)
 
 # plot complexity and resilience relationship
 evalHetRes()
-
-# running time
-end_time <- Sys.time()
-end_time - start_time
