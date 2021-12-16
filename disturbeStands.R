@@ -19,21 +19,23 @@ source('./R/evalHetRes.R')
 # select model (salem, ...)
 ###############################################################
 
-model <- 'landclim'
+model <- 'salem'
 
 ###############################################################
 # create file architecture
 ###############################################################
 
 # define folder structure
-tempPath <- paste0('./data/temp/', model)
-modPath <- paste0('./', model, 'Disturbed')
+tempPath <- paste0('./temp/', model)
+modPath <- paste0('./', model)
 evalPath <- paste0(modPath, '/evaluation')
+resultPath <- paste0(modPath, '/results')
 
 # create temp, landscape and evaluation folders
 if (!(dir.exists(tempPath))) {dir.create(tempPath, recursive = TRUE)}
 if (!(dir.exists(modPath))) {dir.create(modPath, recursive = TRUE)}
 if (!(dir.exists(evalPath))) {dir.create(evalPath, recursive = TRUE)}
+if (!(dir.exists(resultPath))) {dir.create(resultPath, recursive = TRUE)}
 
 ###############################################################
 # calculate tree [c]ritical [w]ind [s]peed
@@ -45,10 +47,10 @@ cws(model)
 # disturb stands
 ###############################################################
 
-# define wind speed modalities or percentage of damaged BA
+# prescribe wind speed modalities or percentage of damaged BA
 # set [w]ind [s]peed
 ws <- c(75, 80, 85)
-# set percentage of [d]amaged [BA]
+# or set percentage of [d]amaged [BA]
 dBA <- c(25, 50, 75)
 
 # plot damaged BA = f(wind speed)
@@ -64,5 +66,9 @@ disturbe()
 # calculate complexity and resilience metrics
 hetRes(model)
 
-# plot complexity and resilience relationship
-evalHetRes()
+# plot complexity - resilience relationship
+# set resilence metrics to plot (from forestdiversity package -
+# e.g. c('DegreeResilience', 'AbsRecovery', 'AbsResistance')
+evalHetRes(metric = c('DegreeResilience', 'AbsRecovery', 'AbsResistance'))
+
+# TODO: conflict with data.table

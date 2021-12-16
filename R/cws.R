@@ -123,7 +123,7 @@ cws <- function(model){
   df75 <- df %>% filter(D_cm >= 7.5)
 
   # calculate cws for all trees
-  cl <- makeCluster(8)
+  cl <- makeCluster(6)
   registerDoParallel(cl)
   cws <- foreach(i = c(1:nrow(df75)), .combine = 'rbind', .packages = 'fgr') %dopar% {damage(i = i, df = df75)}
   stopCluster(cl)

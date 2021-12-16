@@ -10,10 +10,9 @@ hetRes <- function(model){
   require(forestdiversity)
   require(dplyr)
   require(ggplot2)
-  require(data.table)
   require(doParallel)
 
-  # load init data
+  # load init data -------------------------------------------------------------
   if(model == 'salem'){
     initPath <- paste0('./data/init/', model, '/')
   } else {
@@ -26,27 +25,38 @@ hetRes <- function(model){
   init <- rbind(init, init, init)
   init$simID <- paste0(c(rep('W1-', nrowInit), rep('W2-', nrowInit), rep('W3-', nrowInit)), init$simID)
 
-  # load disturbed data
+  # load disturbed data --------------------------------------------------------
   csvFile <- list.files(path = modPath, pattern = '\\.csv$')
   dist <- read.csv(paste0(modPath, '/', csvFile))
 
-  # retrieve list of simulation files
+  # some stands may be completely destroyed and not present in dist
+  # --> add them to dist with no trees
+  # get list of [M]issing [S]tands
+  MSlist <- unique(init$simID)[!(unique(init$simID) %in% unique(dist$simID))]
+  # add them to dist
+  if(length(MSlist) > 0){
+    df <- dist[1:length(MSlist), ] %>% mutate(simID = MSlist, species = NA, D_cm = NA, H_m = NA, V_m3 = NA, weight = NA)
+    dist <- bind_rows(dist, df)
+  }
+
+  # get list of post-dist simulation files -------------------------------------
   simPath <- paste0('./data/sim/', model, '/')
   simList <- list.files(path = simPath, pattern = '\\.csv$')
 
   # species code correspondence
   spCor <- data.frame(spSalem = c(9, 3, 52, 62), species = c('fasy', 'qupe', 'pisy', 'piab'))
 
+  ###############################################################
+  # check whether all stands are present in init, dist and simList
+  ###############################################################
 
-#   # TODO: checker le nombre de init / dist / sim
-  length(unique(init$simID))
-  length(unique(dist$simID))
-  length(simList)
-#   # TODO: que se passe-t-il quand il n'y a pas de dist?
-#   unique(init$simID)[!(unique(init$simID) %in% unique(dist$simID))]
-#   i <- "samsaraPostDist_Reformated_Disturbed_W1-CL1-CD1-G1-D1.csv"
-#
-# ---> ajouter un warning
+  if(length(unique(init$simID)) != length(unique(dist$simID)) | length(unique(init$simID)) != length(simList)){
+    stop(paste("missing stands: pre-dist =", length(unique(init$simID)), '/ disturbed =', length(unique(dist$simID)), '/ post-dist =', length(simList)))
+  }
+
+  ###############################################################
+  # calculate resilience metrics
+  ###############################################################
 
   # recdf <- data.frame()
   hetResMet <- function(i, simPath, init, dist, sim, spCor){
@@ -68,11 +78,11 @@ hetRes <- function(model){
                    relocate(c(X,Y), .after = V_m3)
     #
     # format function from 'forestdiversity'
-    df2 <- format_salem(df, Out = 'HillNb', ClassIni = 7.5) #TODO: define ClassIni = 0?
+    df2 <- format_Pert(df, Out = 'HillNb', ClassIni = 7.5)
     # plot(df2, Nvar='V_m3', RecTime=20, normalize='baseline')
 
     # recovery metrics
-    rec <- EventResilience(df2, Nvar='V_m3', RecTime = 20, normalize = 'baseline')
+    rec <- EventResilience(df2, Nvar = 'V_m3', RecTime = 20, normalize = 'baseline') #TODO: what happens when disturbed stand is completely destroyed???
     rec$simulationId <- ID
     # recdf <- rbind(recdf, rec)
     return(rec)
@@ -81,7 +91,7 @@ hetRes <- function(model){
 
   # run calculation in parallel
   start_time <- Sys.time()
-  cl <- makeCluster(5)
+  cl <- makeCluster(6)
   registerDoParallel(cl)
   df <- foreach(i = simList, .combine = 'rbind', .packages = c('forestdiversity', 'dplyr')) %dopar% {hetResMet(i = i, simPath = simPath, init = init, dist = dist, sim = sim, spCor = spCor)}
   stopCluster(cl)
