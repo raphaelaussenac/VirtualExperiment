@@ -35,7 +35,7 @@ hetRes <- function(model){
   MSlist <- unique(init$simID)[!(unique(init$simID) %in% unique(dist$simID))]
   # add them to dist
   if(length(MSlist) > 0){
-    df <- dist[1:length(MSlist), ] %>% mutate(simID = MSlist, species = NA, D_cm = NA, H_m = NA, V_m3 = NA, weight = NA)
+    df <- dist[1:length(MSlist), ] %>% mutate(simID = MSlist, species = NA, D_cm = 0, H_m = 0, V_m3 = 0, weight = 0)
     dist <- bind_rows(dist, df)
   }
 
@@ -82,9 +82,8 @@ hetRes <- function(model){
     # plot(df2, Nvar='V_m3', RecTime=20, normalize='baseline')
 
     # recovery metrics
-    rec <- EventResilience(df2, Nvar = 'V_m3', RecTime = 20, normalize = 'baseline') #TODO: what happens when disturbed stand is completely destroyed???
+    rec <- EventResilience(df2, Nvar = 'V_m3', RecTime = 20, normalize = 'baseline')
     rec$simulationId <- ID
-    # recdf <- rbind(recdf, rec)
     return(rec)
 
   }

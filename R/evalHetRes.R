@@ -31,54 +31,54 @@ plotHetRes <- function(metric){
 
   # recovery distribution
   pl1 <- ggplot(data = df) +
-  geom_histogram(aes(x = df[, metric]), bins = 100) +
+  geom_histogram(aes(x = get(metric)), bins = 100) +
   theme_bw() #+
   # ggsave(file = paste0(resultPath, '/resilience.jpg'), plot = pl1, width = 10, height = 10)
 
   # wind speed
-  pl2 <- ggplot(data = df, aes(x = ws, y = df[, metric])) +
+  pl2 <- ggplot(data = df, aes(x = ws, y = get(metric))) +
   geom_boxplot() +
   stat_summary(fun = mean, geom = 'point', shape = 20, size = 5, color = 'red', fill = 'red') +
   theme_bw() #+
   # ggsave(file = paste0(resultPath, '/effectWS.jpg'), plot = pl2, width = 10, height = 10)
 
   # climate
-  pl3 <- ggplot(data = df, aes(x = climate, y = df[, metric])) +
+  pl3 <- ggplot(data = df, aes(x = climate, y = get(metric))) +
   geom_boxplot() +
   stat_summary(fun = mean, geom = 'point', shape = 20, size = 5, color = 'red', fill = 'red') +
   theme_bw() #+
   # ggsave(file = paste0(resultPath, '/effectCL.jpg'), plot = pl3, width = 10, height = 10)
 
   # composition
-  pl4 <- ggplot(data = df, aes(x = reorder(cd,-df[, metric], na.rm = TRUE), y = df[, metric], -cd, na.rm = TRUE)) +
+  pl4 <- ggplot(data = df, aes(x = reorder(cd,-get(metric), na.rm = TRUE), y = get(metric), -cd, na.rm = TRUE)) +
   geom_boxplot() +
   stat_summary(fun = mean, geom = 'point', shape = 20, size = 5, color = 'red', fill = 'red') +
   theme_bw() #+
   # ggsave(file = paste0(resultPath, '/effectCD.jpg'), plot = pl4, width = 10, height = 10)
 
   # gini
-  pl5 <- ggplot(data = df, aes(x = gi, y = df[, metric], -cd, na.rm = TRUE)) +
+  pl5 <- ggplot(data = df, aes(x = gi, y = get(metric), -cd, na.rm = TRUE)) +
   geom_boxplot() +
   stat_summary(fun = mean, geom = 'point', shape = 20, size = 5, color = 'red', fill = 'red') +
   theme_bw() #+
   # ggsave(file = paste0(resultPath, '/effectGI.jpg'), plot = pl5, width = 10, height = 10)
 
   # dg
-  pl6 <- ggplot(data = df, aes(x = dg, y = df[, metric], -cd, na.rm = TRUE)) +
+  pl6 <- ggplot(data = df, aes(x = dg, y = get(metric), -cd, na.rm = TRUE)) +
   geom_boxplot() +
   stat_summary(fun = mean, geom = 'point', shape = 20, size = 5, color = 'red', fill = 'red') +
   theme_bw() #+
   # ggsave(file = paste0(resultPath, '/effectDg.jpg'), plot = pl6, width = 10, height = 10)
 
   # sp richness
-  pl7 <- ggplot(data = df, aes(x = NclassSpini, y = df[, metric])) +
+  pl7 <- ggplot(data = df, aes(x = NclassSpini, y = get(metric))) +
   geom_boxplot() +
   stat_summary(fun = mean, geom = 'point', shape = 20, size = 5, color = 'red', fill = 'red') +
   theme_bw() #+
   # ggsave(file = paste0(resultPath, '/effectDI.jpg'), plot = pl7, width = 10, height = 10)
 
   # f(gini, by dg, ws)
-  pl8 <- ggplot(data = df, aes(x = gi, y = df[, metric])) +
+  pl8 <- ggplot(data = df, aes(x = gi, y = get(metric))) +
   geom_boxplot() +
   scale_fill_manual(values = c('chartreuse2', 'orangered', 'turquoise1', 'darkorchid2')) +
   stat_summary(fun = mean, geom = 'point', shape = 19, size = 5, col = 'black') +
@@ -88,7 +88,7 @@ plotHetRes <- function(metric){
   # ggsave(file = paste0(resultPath, '/giniNested.jpg'), plot = pl8, width = 10, height = 10)
 
   # f(gini, by dg, ws and cl)
-  pl9 <- ggplot(data = df, aes(x = gi, y = df[, metric])) +
+  pl9 <- ggplot(data = df, aes(x = gi, y = get(metric))) +
   geom_boxplot(aes(fill = climate)) +
   scale_fill_manual(values = c('chartreuse2', 'orangered', 'turquoise1', 'darkorchid2')) +
   stat_summary(fun = mean, geom = 'point', shape = 19, size = 5, col = 'black') +
@@ -98,7 +98,7 @@ plotHetRes <- function(metric){
   # ggsave(file = paste0(resultPath, '/giniClimNested.jpg'), plot = pl9, width = 10, height = 10)
 
   # f(sp richness, by dg, ws)
-  pl10 <- ggplot(data = df, aes(x = NclassSpini, y = df[, metric])) +
+  pl10 <- ggplot(data = df, aes(x = NclassSpini, y = get(metric))) +
   geom_boxplot() +
   stat_summary(fun = mean, geom = 'point', shape = 19, size = 5, col = 'black') +
   facet_wrap(dg~ws, nrow = 1) +
@@ -107,7 +107,7 @@ plotHetRes <- function(metric){
   # ggsave(file = paste0(resultPath, '/spNested.jpg'), plot = pl10, width = 10, height = 10)
 
   # f(sp richness, by dg, ws)
-  pl11 <- ggplot(data = df, aes(x = NclassSpini, y = df[, metric])) +
+  pl11 <- ggplot(data = df, aes(x = NclassSpini, y = get(metric))) +
   geom_boxplot(aes(fill = gi)) +
   stat_summary(fun = mean, geom = 'point', shape = 19, size = 5, col = 'black') +
   facet_wrap(dg~ws, nrow = 1) +

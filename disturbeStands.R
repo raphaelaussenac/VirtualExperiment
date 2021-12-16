@@ -19,7 +19,7 @@ source('./R/evalHetRes.R')
 # select model (salem, ...)
 ###############################################################
 
-model <- 'salem'
+model <- 'samsara'
 
 ###############################################################
 # create file architecture
@@ -70,5 +70,3 @@ hetRes(model)
 # set resilence metrics to plot (from forestdiversity package -
 # e.g. c('DegreeResilience', 'AbsRecovery', 'AbsResistance')
 evalHetRes(metric = c('DegreeResilience', 'AbsRecovery', 'AbsResistance'))
-
-# TODO: conflict with data.table
