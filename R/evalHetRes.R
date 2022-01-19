@@ -17,7 +17,7 @@ plotHetRes <- function(metric){
   df <- cbind(df, modalities)
 
   # plot interactions
-  df <- df  %>% mutate(cl = case_when(cl == 'CL1' ~ 'peak', #68
+  df <- df %>% mutate(cl = case_when(cl == 'CL1' ~ 'peak', #68
                                         cl == 'CL2' ~ 'hotter', #77
                                         cl == 'CL3' ~ 'wetter',
                                         cl == 'CL4' ~ 'hotter-wetter'),

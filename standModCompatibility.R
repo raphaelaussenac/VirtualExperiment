@@ -10,21 +10,41 @@ library(tidyverse)
 library(data.table)
 
 # set work directory
-setwd("C:/Users/raphael.aussenac/Documents/GitHub/VirtualExperiment/data/initSim")
+setwd("C:/Users/raphael.aussenac/Documents/GitHub/VirtualExperiment/data")
 
 ###############################################################
-# load and stack simulations
+# load initial stands
 ###############################################################
 
-# TODO: add initial state
+# salem initial stands
+initPath <- paste0('./init/salem/')
+csvFile <- list.files(path = initPath, pattern = '\\.csv$')
+salemInit <- read.csv(paste0(initPath, csvFile), sep = ';')
+salemInit$mod <- 'salem'
+
+# other models initial stands
+initPath <- paste0('./init/otherModels/')
+csvFile <- list.files(path = initPath, pattern = '\\.csv$')
+otherInit <- read.csv(paste0(initPath, csvFile), sep = ';')
+nbrows <- nrow(otherInit)
+otherInit <- rbind(otherInit, otherInit, otherInit)
+otherInit$mod <- c(rep('landclim', nbrows), rep('4c', nbrows), rep('samsara', nbrows))
+
+# bind all init stands
+init <- rbind(salemInit, otherInit)
+
+
+###############################################################
+# load pre-dist simulations and stack on init stands
+###############################################################
 
 # model list
 mod <- c('salem', 'samsara', 'landclim')
 
 # create file list
 simList <- function(mod){
-  fl <- list.files(path = paste0('./', mod), pattern = '\\.csv$')
-  fl <- paste0('./', mod, '/', fl)
+  fl <- list.files(path = paste0('./initSim/', mod), pattern = '\\.csv$')
+  fl <- paste0('./initSim/', mod, '/', fl)
   return(fl)
 }
 fileList <- unlist(lapply(mod, simList))
@@ -34,38 +54,51 @@ fileList <- unlist(lapply(mod, simList))
 readBind <- function(file, mod){
   model <- mod[str_detect(file, mod)]
   df <- read.csv(file, sep = ';')
-  if(model == 'landclim'){
-    df$comment <- NA
-  }
   df$mod <- model
   return(df)
 }
 df <- lapply(fileList, readBind, mod)
 df <- rbindlist(df)
 
+# stack on init stands
+df <- rbind(init, df)
+
 
 ###############################################################
 # calculate BA trajectories
 ###############################################################
 
-# calculate BA
-ba <- df %>% group_by(mod, simID, year) %>% summarise(BAtot = sum((pi * (D_cm/200)^2) * weight))
+# calculate BAtot
+batot <- df %>% group_by(mod, simID, year) %>% summarise(BAtot = sum((pi * (D_cm/200)^2) * weight))
 
-ggplot(ba) +
+# add specific columns with modalities
+modalities <- data.frame(str_split(batot$simID, '-', simplify = TRUE))
+colnames(modalities) <- c('cl', 'cd', 'gi', 'dg')
+batot <- cbind(batot, modalities)
+
+# specify climate
+batot <- batot %>% mutate(cl = case_when(cl == 'CL1' ~ 'peak',
+                                         cl == 'CL2' ~ 'hotter',
+                                         cl == 'CL3' ~ 'wetter',
+                                         cl == 'CL4' ~ 'hotter-wetter'))
+#
+# plot all simID
+ggplot(batot) +
 geom_line(aes(x = year, y = BAtot, col = simID)) +
-facet_wrap(.~mod) +
+facet_wrap(.~mod, nrow = 1) +
 theme_bw() +
 theme(legend.position = 'none')
 
+# plot all simID but assign color depending on CD factor
+ggplot(batot) +
+geom_line(aes(x = year, y = BAtot, col = cl, group = simID)) +
+facet_wrap(.~mod, nrow = 1) +
+theme_bw() +
+theme(legend.position = 'bottom')
 
-
-# TODO: check if number of simulation == for all models
-# --> sur le fichier final: ba?
-
-
-test <- ba %>% filter(year == 2001, mod == 'salem') %>% arrange(BAtot)
-
-
-###############################################################
-# plot
-###############################################################
+# plot only climate 'hotter'
+ggplot(batot %>% filter(cl == 'hotter')) +
+geom_line(aes(x = year, y = BAtot, col = cl, group = simID)) +
+facet_wrap(.~mod, nrow = 1) +
+theme_bw() +
+theme(legend.position = 'bottom')
