@@ -19,7 +19,7 @@ source('./R/evalHetRes.R')
 # select model (salem, ...)
 ###############################################################
 
-model <- 'samsara'
+model <- 'salem'
 
 ###############################################################
 # create file architecture
