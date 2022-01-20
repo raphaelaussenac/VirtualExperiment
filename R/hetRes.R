@@ -48,10 +48,17 @@ hetRes <- function(model){
 
   ###############################################################
   # check whether all stands are present in init, dist and simList
+  # and if there are some NA in d, h or vol
   ###############################################################
 
   if(length(unique(init$simID)) != length(unique(dist$simID)) | length(unique(init$simID)) != length(simList)){
     stop(paste("missing stands: pre-dist =", length(unique(init$simID)), '/ disturbed =', length(unique(dist$simID)), '/ post-dist =', length(simList)))
+  }
+  if(sum(is.na(init[, c('D_cm', 'H_m', 'V_m3')])) > 0){
+    stop('NA in D_cm or H_m or V-m3 in initial stands')
+  }
+  if(sum(is.na(dist[, c('D_cm', 'H_m', 'V_m3')])) > 0){
+    stop('NA in D_cm or H_m or V-m3 in disturbed stands')
   }
 
   ###############################################################
@@ -63,6 +70,10 @@ hetRes <- function(model){
     # load sim data
     sim <- read.csv(paste0(simPath, '/', i), sep = ';')
     ID <- sim$simID[1]
+    # check if there are some NA in d, h or vol
+    if(sum(is.na(dist[, c('D_cm', 'H_m', 'V_m3')])) > 0){
+      stop('NA in D_cm or H_m or V-m3 in post-disturbance stands')
+    }
     # rbind init, dist and sim
     df <- rbind(init[init$simID == ID,], dist[dist$simID == ID,], sim)
     # format sim
