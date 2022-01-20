@@ -39,7 +39,7 @@ init <- rbind(salemInit, otherInit)
 ###############################################################
 
 # model list
-mod <- c('salem', 'samsara', 'landclim')
+mod <- c('salem', 'samsara', 'landclim', '4c')
 
 # create file list
 simList <- function(mod){
@@ -64,29 +64,20 @@ df <- rbindlist(df)
 # test whether all initial stands have their associated sim
 ###############################################################
 
-# count nb of [i]nitial stands and [s]imulations
-si <- length(unique(init[init$mod == 'salem', 'simID']))
-ss <- nrow(unique(df[df$mod == 'salem', 'simID']))
-li <- length(unique(init[init$mod == 'landclim', 'simID']))
-ls <- nrow(unique(df[df$mod == 'landclim', 'simID']))
-sami <- length(unique(init[init$mod == 'samsara', 'simID']))
-sams <- nrow(unique(df[df$mod == 'samsara', 'simID']))
-ci <- length(unique(init[init$mod == '4c', 'simID']))
-cs <- nrow(unique(df[df$mod == '4c', 'simID']))
-
-if(si != ss){
-  warning('missing stands from salem:', si, ' initial stands - ', ss, ' simulations')
+test <- function(model, init, df){
+  ini <- length(unique(init[init$mod == model, 'simID']))
+  sim <- nrow(unique(df[df$mod == model, 'simID']))
+  if(ini != sim){
+    stop('missing stands from ', model, ': ', ini, ' initial stands - ', sim, ' simulations')
+  }
+  if(sum(is.na(init$D_cm)) > 0){
+    stop(sum(is.na(init$D_cm)), ' missing diameter in ', model, ' initial stands')
+  }
+  if(sum(is.na(df$D_cm)) > 0){
+    stop(sum(is.na(df$D_cm)), ' missing diameter in ', model, ' simulations')
+  }
 }
-if(li != ls){
-  warning('missing stands from landclim:', li, ' initial stands - ', ls, ' simulations')
-}
-if(sami != sams){
-  warning('missing stands from samsara:', sami, ' initial stands - ', sams, ' simulations')
-}
-if(ci != cs){
-  warning('missing stands from 4c: ', ci, ' initial stands - ', cs, ' simulations')
-}
-
+invisible(lapply(mod, test, init, df))
 
 ###############################################################
 # calculate BA trajectories
@@ -95,6 +86,8 @@ if(ci != cs){
 # stack on init stands
 df <- rbind(init, df)
 df$year <- as.integer(df$year)
+# remove years > 2050
+df <- df %>% filter(year<=2010)
 
 # calculate BAtot
 batot <- df %>% group_by(mod, simID, year) %>% summarise(BAtot = sum((pi * (D_cm/200)^2) * weight))
