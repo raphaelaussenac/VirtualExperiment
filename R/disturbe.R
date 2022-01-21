@@ -37,7 +37,7 @@ disturbe <- function(){
 
   # save
   disturbed$postDisturbance <- 'true'
-  write.csv(disturbed, paste0(modPath, '/', model, '_Disturbed_', format(Sys.Date(),"%d_%m_%Y"), '.csv'), row.names = FALSE)
+  write.csv(disturbed, paste0(modPath, '/', model, '_Disturbed_', format(Sys.Date(),'%d_%m_%Y'), '.csv'), row.names = FALSE)
 
   ###############################################################
   # evaluation

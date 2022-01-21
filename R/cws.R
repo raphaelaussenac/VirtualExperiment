@@ -4,8 +4,8 @@ cws <- function(model){
   ###############################################################
 
   # load packages
-  # library("devtools")
-  # devtools::install_github("tom-locatelli/fgr", build_vignettes = FALSE)
+  # library('devtools')
+  # devtools::install_github('tom-locatelli/fgr', build_vignettes = FALSE)
   require(fgr)
   require(dplyr)
   require(ggplot2)
@@ -72,7 +72,7 @@ cws <- function(model){
                group_by(simID) %>% mutate(BAtot = sum((pi * (D_cm/200)^2) * weight)) %>%
                ungroup()
   #
-  # assign to each tree the ratio of "BA of larger trees" / BAtot
+  # assign to each tree the ratio of 'BA of larger trees' / BAtot
   df <- df %>% arrange(-D_cm) %>% mutate(Drank = 1:nrow(df)) %>% group_by(simID) %>%
                mutate(BAl = cumsum(BAtree))
   # shift column BAl down by one row
@@ -111,7 +111,7 @@ cws <- function(model){
                      stand_top_ht = df$domH[i],
                      stand_mean_dbh = df$Dg[i],
                      stem_vol = df$V_m3[i],
-                     ci = "bal",
+                     ci = 'bal',
                      ci_value = df$CI[i],
                      soil_group = df$soil[i],
                      rooting = df$roots[i],

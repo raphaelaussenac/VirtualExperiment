@@ -52,7 +52,7 @@ hetRes <- function(model, var){
   ###############################################################
 
   if(length(unique(init$simID)) != length(unique(dist$simID)) | length(unique(init$simID)) != length(simList)){
-    stop(paste("missing stands: pre-dist =", length(unique(init$simID)), '/ disturbed =', length(unique(dist$simID)), '/ post-dist =', length(simList)))
+    stop(paste('missing stands: pre-dist =', length(unique(init$simID)), '/ disturbed =', length(unique(dist$simID)), '/ post-dist =', length(simList)))
   }
   if(sum(is.na(init[, c('D_cm', 'H_m', 'V_m3')])) > 0){
     stop('NA in D_cm or H_m or V-m3 in initial stands')

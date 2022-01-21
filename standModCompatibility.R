@@ -10,7 +10,10 @@ library(tidyverse)
 library(data.table)
 
 # set work directory
-setwd("C:/Users/raphael.aussenac/Documents/GitHub/VirtualExperiment/data")
+setwd('C:/Users/raphael.aussenac/Documents/GitHub/VirtualExperiment/data')
+
+# load source
+source('../R/ftp.R')
 
 # create folders
 if (!(dir.exists('../standModCompatibility'))) {dir.create('../standModCompatibility', recursive = TRUE)}
@@ -130,7 +133,7 @@ climate <- 'peak'
 pl3 <- ggplot(batot %>% filter(cl == climate)) +
 geom_line(aes(x = year, y = BAtot, group = simID), alpha = 0.3) +
 facet_wrap(.~mod, nrow = 1) +
-ggtitle(climate) +
+ggtitle(paste(climate, 'climate')) +
 scale_x_continuous(minor_breaks = seq(2000 , 2010, 1), breaks = seq(2000, 2010, 1)) +
 ylim(y) + myTheme
 
@@ -138,7 +141,7 @@ climate <- 'hotter'
 pl4 <- ggplot(batot %>% filter(cl == climate)) +
 geom_line(aes(x = year, y = BAtot, group = simID), alpha = 0.3) +
 facet_wrap(.~mod, nrow = 1) +
-ggtitle(climate) +
+ggtitle(paste(climate, 'climate')) +
 scale_x_continuous(minor_breaks = seq(2000 , 2010, 1), breaks = seq(2000, 2010, 1)) +
 ylim(y) + myTheme
 
@@ -146,7 +149,7 @@ climate <- 'wetter'
 pl5 <- ggplot(batot %>% filter(cl == climate)) +
 geom_line(aes(x = year, y = BAtot, group = simID), alpha = 0.3) +
 facet_wrap(.~mod, nrow = 1) +
-ggtitle(climate) +
+ggtitle(paste(climate, 'climate')) +
 scale_x_continuous(minor_breaks = seq(2000 , 2010, 1), breaks = seq(2000, 2010, 1)) +
 ylim(y) + myTheme
 
@@ -154,7 +157,7 @@ climate <- 'hotter-wetter'
 pl6 <- ggplot(batot %>% filter(cl == climate)) +
 geom_line(aes(x = year, y = BAtot, group = simID), alpha = 0.3) +
 facet_wrap(.~mod, nrow = 1) +
-ggtitle(climate) +
+ggtitle(paste(climate, 'climate')) +
 scale_x_continuous(minor_breaks = seq(2000 , 2010, 1), breaks = seq(2000, 2010, 1)) +
 ylim(y) + myTheme
 
@@ -168,3 +171,8 @@ print(pl4)
 print(pl5)
 print(pl6)
 dev.off()
+
+# upload to ftp
+up(file = '../standModCompatibility/BAtrajectories.pdf',
+   serverPath = '/01_DATA/virtual_experiment/stands/3_initial_stands_sim/BAtrajectories.pdf')
+#

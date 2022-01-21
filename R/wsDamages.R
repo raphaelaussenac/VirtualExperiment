@@ -38,7 +38,7 @@ wsDamages <- function(method, thresholds){
   # thresholds
   if(method == 'ws'){
     damdfThresholds <- damdf %>% filter(ws %in% thresholds)
-  } else if(method == "dBA"){
+  } else if(method == 'dBA'){
     thresh <- damdf %>% group_by(ws) %>% summarise(median = median(damagedBA)) %>%
                                          mutate(thresh1 = abs(median-thresholds[1]),
                                                 thresh2 = abs(median-thresholds[2]),
@@ -54,7 +54,7 @@ wsDamages <- function(method, thresholds){
   geom_boxplot(data = damdf, aes(x = ws, y = damagedBA, group = ws), fill = 'grey', width = 0.8) +
   geom_boxplot(data = damdfThresholds, aes(x = ws, y = damagedBA, group = ws), col = 'red', fill = 'pink', width = 0.8) +
   theme_light() +
-  theme(legend.position = "none") +
+  theme(legend.position = 'none') +
   scale_y_continuous(minor_breaks = seq(0 , 100, 5), breaks = seq(0, 100, 10)) +
   scale_x_continuous(minor_breaks = seq(50 , 120, 5), breaks = seq(50, 120, 5))
   pl1

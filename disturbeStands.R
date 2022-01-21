@@ -6,7 +6,7 @@
 rm(list = ls())
 
 # set work directory
-setwd("C:/Users/raphael.aussenac/Documents/GitHub/VirtualExperiment")
+setwd('C:/Users/raphael.aussenac/Documents/GitHub/VirtualExperiment')
 
 # load source (all R files in R folder)
 source('./R/cws.R')
