@@ -124,7 +124,7 @@ scale_x_continuous(minor_breaks = seq(2000 , 2010, 1), breaks = seq(2000, 2010, 
 # plot climate separately
 y <- c(0, 45)
 myTheme <- theme_bw() +
-theme(legend.position = 'bottom', strip.background = element_rect(colour = 'black', fill = 'white'))
+theme(plot.title = element_text(hjust = 0.5), legend.position = 'bottom', strip.background = element_rect(colour = 'black', fill = 'white'))
 
 climate <- 'peak'
 pl3 <- ggplot(batot %>% filter(cl == climate)) +

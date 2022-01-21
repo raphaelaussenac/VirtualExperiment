@@ -1,4 +1,4 @@
-plotHetRes <- function(metric, var){
+plotHetRes <- function(metric, var, model){
 
   ###############################################################
   # initialisation
@@ -29,53 +29,64 @@ plotHetRes <- function(metric, var){
   # plot het - res relationship
   ###############################################################
 
+  # common theme
+  myTheme <- theme_bw() +
+             theme(plot.title = element_text(hjust = 0.5), strip.background = element_rect(colour = 'black', fill = 'white'))
+
   # recovery distribution
   pl1 <- ggplot(data = df) +
   geom_histogram(aes(x = get(metric)), bins = 100) +
   xlab(paste(var, '-', metric)) +
-  theme_bw() #+
+  ggtitle(model) +
+  myTheme
 
   # wind speed
   pl2 <- ggplot(data = df, aes(x = ws, y = get(metric))) +
   geom_boxplot() +
   stat_summary(fun = mean, geom = 'point', shape = 20, size = 5, color = 'red', fill = 'red') +
   ylab(paste(var, '-', metric)) +
-  theme_bw()
+  ggtitle(model) +
+  myTheme
 
   # climate
   pl3 <- ggplot(data = df, aes(x = climate, y = get(metric))) +
   geom_boxplot() +
   stat_summary(fun = mean, geom = 'point', shape = 20, size = 5, color = 'red', fill = 'red') +
   ylab(paste(var, '-', metric)) +
-  theme_bw()
+  ggtitle(model) +
+  myTheme
 
   # composition
   pl4 <- ggplot(data = df, aes(x = reorder(cd,-get(metric), na.rm = TRUE), y = get(metric), -cd, na.rm = TRUE)) +
   geom_boxplot() +
   stat_summary(fun = mean, geom = 'point', shape = 20, size = 5, color = 'red', fill = 'red') +
   ylab(paste(var, '-', metric)) +
-  theme_bw()
+  ggtitle(model) +
+  myTheme
 
   # gini
   pl5 <- ggplot(data = df, aes(x = gi, y = get(metric), -cd, na.rm = TRUE)) +
   geom_boxplot() +
   stat_summary(fun = mean, geom = 'point', shape = 20, size = 5, color = 'red', fill = 'red') +
   ylab(paste(var, '-', metric)) +
-  theme_bw()
+  ggtitle(model) +
+  myTheme
 
   # dg
   pl6 <- ggplot(data = df, aes(x = dg, y = get(metric), -cd, na.rm = TRUE)) +
   geom_boxplot() +
   stat_summary(fun = mean, geom = 'point', shape = 20, size = 5, color = 'red', fill = 'red') +
   ylab(paste(var, '-', metric)) +
-  theme_bw()
+  ggtitle(model) +
+  myTheme
 
   # sp richness
   pl7 <- ggplot(data = df, aes(x = NclassSpini, y = get(metric))) +
   geom_boxplot() +
   stat_summary(fun = mean, geom = 'point', shape = 20, size = 5, color = 'red', fill = 'red') +
   ylab(paste(var, '-', metric)) +
-  theme_bw()
+  ggtitle(model) +
+  myTheme
 
   # f(gini, by dg, ws)
   pl8 <- ggplot(data = df, aes(x = gi, y = get(metric))) +
@@ -84,8 +95,8 @@ plotHetRes <- function(metric, var){
   stat_summary(fun = mean, geom = 'point', shape = 19, size = 5, col = 'black') +
   facet_wrap(dg~ws, nrow = 1) +
   ylab(paste(var, '-', metric)) +
-  theme_bw() +
-  theme(strip.background = element_rect(colour = 'black', fill = 'white'))
+  ggtitle(model) +
+  myTheme
 
   # f(gini, by dg, ws and cl)
   pl9 <- ggplot(data = df, aes(x = gi, y = get(metric))) +
@@ -94,8 +105,8 @@ plotHetRes <- function(metric, var){
   stat_summary(fun = mean, geom = 'point', shape = 19, size = 5, col = 'black') +
   facet_wrap(dg~ws, nrow = 1) +
   ylab(paste(var, '-', metric)) +
-  theme_bw() +
-  theme(strip.background = element_rect(colour = 'black', fill = 'white'), legend.position = 'bottom')
+  ggtitle(model) +
+  myTheme
 
   # f(sp richness, by dg, ws)
   pl10 <- ggplot(data = df, aes(x = NclassSpini, y = get(metric))) +
@@ -103,9 +114,8 @@ plotHetRes <- function(metric, var){
   stat_summary(fun = mean, geom = 'point', shape = 19, size = 5, col = 'black') +
   facet_wrap(dg~ws, nrow = 1) +
   ylab(paste(var, '-', metric)) +
-  theme_bw() +
-  theme(strip.background = element_rect(colour = 'black', fill = 'white'))
-
+  ggtitle(model) +
+  myTheme
 
   # f(sp richness, by dg, ws)
   pl11 <- ggplot(data = df, aes(x = NclassSpini, y = get(metric))) +
@@ -113,8 +123,8 @@ plotHetRes <- function(metric, var){
   stat_summary(fun = mean, geom = 'point', shape = 19, size = 5, col = 'black') +
   facet_wrap(dg~ws, nrow = 1) +
   ylab(paste(var, '-', metric)) +
-  theme_bw() +
-  theme(strip.background = element_rect(colour = 'black', fill = 'white'), legend.position = 'bottom')
+  ggtitle(model) +
+  myTheme
 
   # save all plots in a single pdf
   pdf(paste0(resultPath, '/', metric, '.pdf'), width = 10, height = 10)
@@ -134,6 +144,6 @@ plotHetRes <- function(metric, var){
 }
 
 
-evalHetRes <- function(metric, var){
-  lapply(metric, plotHetRes, var)
+evalHetRes <- function(metric, var, model){
+  lapply(metric, plotHetRes, var, model)
 }

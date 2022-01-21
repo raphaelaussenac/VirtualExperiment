@@ -19,7 +19,7 @@ source('./R/evalHetRes.R')
 # select model (salem, ...)
 ###############################################################
 
-model <- 'landclim'
+model <- 'samsara'
 
 ###############################################################
 # create file architecture
@@ -63,13 +63,15 @@ disturbe()
 # calculate resilience metrics
 ###############################################################
 
-# define variable of interest (BA, V_m3)
+# define variable of interest
+# e.g. BA, V_m3
 variable <- 'BA'
+# define resilience metrics
+# e.g. c('DegreeResilience', 'AbsRecovery', 'AbsResistance')
+metric = c('DegreeResilience', 'AbsRecovery', 'AbsResistance')
 
 # calculate complexity and resilience metrics
-hetRes(model, var = variable)
+hetRes(model, variable)
 
 # plot complexity - resilience relationship
-# set resilence metrics to plot (from forestdiversity package -
-# e.g. c('DegreeResilience', 'AbsRecovery', 'AbsResistance')
-evalHetRes(metric = c('DegreeResilience', 'AbsRecovery', 'AbsResistance'), var = variable)
+evalHetRes(metric, variable, model)
