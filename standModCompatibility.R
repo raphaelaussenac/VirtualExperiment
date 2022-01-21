@@ -107,27 +107,64 @@ batot <- batot %>% mutate(cl = case_when(cl == 'CL1' ~ 'peak',
 #
 # plot all simID
 pl1 <- ggplot(batot) +
-geom_line(aes(x = year, y = BAtot, col = simID)) +
+geom_line(aes(x = year, y = BAtot, group = simID), alpha = 0.1) +
 facet_wrap(.~mod, nrow = 1) +
 theme_bw() +
-theme(legend.position = 'none') +
+theme(legend.position = 'none', strip.background = element_rect(colour = 'black', fill = 'white')) +
 scale_x_continuous(minor_breaks = seq(2000 , 2010, 1), breaks = seq(2000, 2010, 1))
-ggsave(file = '../standModCompatibility/BA.pdf', plot = pl1, width = 15, height = 10)
 
-# plot all simID but assign color depending on CD factor
+# plot all simID but assign color depending on climate factor
 pl2 <- ggplot(batot) +
-geom_line(aes(x = year, y = BAtot, col = cl, group = simID)) +
-facet_wrap(.~mod, nrow = 1) +
+geom_line(aes(x = year, y = BAtot, col = cl, group = simID), alpha = 0.2) +
+facet_wrap(. ~ mod, nrow = 1) +
 theme_bw() +
-theme(legend.position = 'bottom') +
+theme(legend.position = 'bottom', strip.background = element_rect(colour = 'black', fill = 'white')) +
 scale_x_continuous(minor_breaks = seq(2000 , 2010, 1), breaks = seq(2000, 2010, 1))
-ggsave(file = '../standModCompatibility/BAclim.pdf', plot = pl2, width = 15, height = 10)
 
-# plot only climate 'hotter'
-pl3 <- ggplot(batot %>% filter(cl == 'hotter')) +
-geom_line(aes(x = year, y = BAtot, col = cl, group = simID)) +
+# plot climate separately
+y <- c(0, 45)
+myTheme <- theme_bw() +
+theme(legend.position = 'bottom', strip.background = element_rect(colour = 'black', fill = 'white'))
+
+climate <- 'peak'
+pl3 <- ggplot(batot %>% filter(cl == climate)) +
+geom_line(aes(x = year, y = BAtot, group = simID), alpha = 0.3) +
 facet_wrap(.~mod, nrow = 1) +
-theme_bw() +
-theme(legend.position = 'bottom') +
-scale_x_continuous(minor_breaks = seq(2000 , 2010, 1), breaks = seq(2000, 2010, 1))
-ggsave(file = '../standModCompatibility/BAclimHotter.pdf', plot = pl3, width = 15, height = 10)
+ggtitle(climate) +
+scale_x_continuous(minor_breaks = seq(2000 , 2010, 1), breaks = seq(2000, 2010, 1)) +
+ylim(y) + myTheme
+
+climate <- 'hotter'
+pl4 <- ggplot(batot %>% filter(cl == climate)) +
+geom_line(aes(x = year, y = BAtot, group = simID), alpha = 0.3) +
+facet_wrap(.~mod, nrow = 1) +
+ggtitle(climate) +
+scale_x_continuous(minor_breaks = seq(2000 , 2010, 1), breaks = seq(2000, 2010, 1)) +
+ylim(y) + myTheme
+
+climate <- 'wetter'
+pl5 <- ggplot(batot %>% filter(cl == climate)) +
+geom_line(aes(x = year, y = BAtot, group = simID), alpha = 0.3) +
+facet_wrap(.~mod, nrow = 1) +
+ggtitle(climate) +
+scale_x_continuous(minor_breaks = seq(2000 , 2010, 1), breaks = seq(2000, 2010, 1)) +
+ylim(y) + myTheme
+
+climate <- 'hotter-wetter'
+pl6 <- ggplot(batot %>% filter(cl == climate)) +
+geom_line(aes(x = year, y = BAtot, group = simID), alpha = 0.3) +
+facet_wrap(.~mod, nrow = 1) +
+ggtitle(climate) +
+scale_x_continuous(minor_breaks = seq(2000 , 2010, 1), breaks = seq(2000, 2010, 1)) +
+ylim(y) + myTheme
+
+
+# save all plots in a single pdf
+pdf('../standModCompatibility/BAtrajectories.pdf', width = 15, height = 10)
+print(pl1)
+print(pl2)
+print(pl3)
+print(pl4)
+print(pl5)
+print(pl6)
+dev.off()
