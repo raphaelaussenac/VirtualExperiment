@@ -102,11 +102,26 @@ modalities <- data.frame(str_split(batot$simID, '-', simplify = TRUE))
 colnames(modalities) <- c('cl', 'cd', 'gi', 'dg')
 batot <- cbind(batot, modalities)
 
-# specify climate
+# specify climate and composition
 batot <- batot %>% mutate(cl = case_when(cl == 'CL1' ~ 'peak',
                                          cl == 'CL2' ~ 'hotter',
                                          cl == 'CL3' ~ 'wetter',
-                                         cl == 'CL4' ~ 'hotter-wetter'))
+                                         cl == 'CL4' ~ 'hotter-wetter'),
+                          cd = case_when(cd == 'CD1' ~ 'fasy',
+                                         cd == 'CD2' ~ 'qupe',
+                                         cd == 'CD3' ~ 'pisy',
+                                         cd == 'CD4' ~ 'piab',
+                                         cd == 'CD5' ~ 'fasy qupe',
+                                         cd == 'CD6' ~ 'fasy pisy',
+                                         cd == 'CD7' ~ 'fasy piab',
+                                         cd == 'CD8' ~ 'qupe pisy',
+                                         cd == 'CD9' ~ 'qupe piab',
+                                         cd == 'CD10' ~ 'pisy piab',
+                                         cd == 'CD11' ~ 'fasy qupe pisy',
+                                         cd == 'CD12' ~ 'fasy qupe piab',
+                                         cd == 'CD13' ~ 'fasy pisy piab',
+                                         cd == 'CD14' ~ 'qupe pisy piab',
+                                         cd == 'CD15' ~ 'fasy qupe pisy piab'))
 #
 # plot all simID
 pl1 <- ggplot(batot) +
@@ -125,51 +140,43 @@ theme(legend.position = 'bottom', strip.background = element_rect(colour = 'blac
 scale_x_continuous(minor_breaks = seq(2000 , 2010, 1), breaks = seq(2000, 2010, 1))
 
 # plot climate separately
+climates <- c('peak', 'hotter', 'wetter', 'hotter-wetter')
 y <- c(0, 45)
 myTheme <- theme_bw() +
 theme(plot.title = element_text(hjust = 0.5), legend.position = 'bottom', strip.background = element_rect(colour = 'black', fill = 'white'))
 
-climate <- 'peak'
-pl3 <- ggplot(batot %>% filter(cl == climate)) +
-geom_line(aes(x = year, y = BAtot, group = simID), alpha = 0.3) +
-facet_wrap(.~mod, nrow = 1) +
-ggtitle(paste(climate, 'climate')) +
-scale_x_continuous(minor_breaks = seq(2000 , 2010, 1), breaks = seq(2000, 2010, 1)) +
-ylim(y) + myTheme
+# plot climate and composition separately
+myTheme2 <- theme_bw() +
+theme(plot.title = element_text(hjust = 0.5),
+      legend.position = 'none',
+      strip.background = element_rect(colour = 'black', fill = 'white'),
+      axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
+      strip.text.x = element_text(size = 6.5))
+#
+# plot functions
+clim <- function(clim, batot){
+  pl3 <- ggplot(batot %>% filter(cl == clim)) +
+  geom_line(aes(x = year, y = BAtot, group = simID), alpha = 0.3) +
+  facet_wrap(.~mod, nrow = 1) +
+  ggtitle(paste(clim, 'climate')) +
+  scale_x_continuous(minor_breaks = seq(2000 , 2010, 1), breaks = seq(2000, 2010, 1)) +
+  ylim(y) + myTheme
+}
 
-climate <- 'hotter'
-pl4 <- ggplot(batot %>% filter(cl == climate)) +
-geom_line(aes(x = year, y = BAtot, group = simID), alpha = 0.3) +
-facet_wrap(.~mod, nrow = 1) +
-ggtitle(paste(climate, 'climate')) +
-scale_x_continuous(minor_breaks = seq(2000 , 2010, 1), breaks = seq(2000, 2010, 1)) +
-ylim(y) + myTheme
+climCompo <- function(clim, batot){
+  pl4 <- ggplot(batot %>% filter(cl == clim)) +
+  geom_line(aes(x = year, y = BAtot, group = simID, col = cd)) +
+  facet_grid(mod~cd) +
+  ggtitle(paste(clim, 'climate')) +
+  scale_x_continuous(minor_breaks = seq(2000 , 2010, 2), breaks = seq(2000, 2010, 2)) +
+  ylim(y) + myTheme2
+}
 
-climate <- 'wetter'
-pl5 <- ggplot(batot %>% filter(cl == climate)) +
-geom_line(aes(x = year, y = BAtot, group = simID), alpha = 0.3) +
-facet_wrap(.~mod, nrow = 1) +
-ggtitle(paste(climate, 'climate')) +
-scale_x_continuous(minor_breaks = seq(2000 , 2010, 1), breaks = seq(2000, 2010, 1)) +
-ylim(y) + myTheme
-
-climate <- 'hotter-wetter'
-pl6 <- ggplot(batot %>% filter(cl == climate)) +
-geom_line(aes(x = year, y = BAtot, group = simID), alpha = 0.3) +
-facet_wrap(.~mod, nrow = 1) +
-ggtitle(paste(climate, 'climate')) +
-scale_x_continuous(minor_breaks = seq(2000 , 2010, 1), breaks = seq(2000, 2010, 1)) +
-ylim(y) + myTheme
-
-
-# save all plots in a single pdf
 pdf('../standModCompatibility/BAtrajectories.pdf', width = 15, height = 10)
 print(pl1)
 print(pl2)
-print(pl3)
-print(pl4)
-print(pl5)
-print(pl6)
+lapply(climates, clim, batot)
+lapply(climates, climCompo, batot)
 dev.off()
 
 # upload to ftp
