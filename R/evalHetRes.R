@@ -127,7 +127,8 @@ plotHetRes <- function(metric, var, model){
   myTheme
 
   # save all plots in a single pdf
-  pdf(paste0(resultPath, '/', metric, '.pdf'), width = 10, height = 10)
+  pdfName <- paste0(model , '_', metric, '.pdf')
+  pdf(paste0(resultPath, '/', pdfName), width = 15, height = 10)
   print(pl1)
   print(pl2)
   print(pl3)
@@ -141,8 +142,11 @@ plotHetRes <- function(metric, var, model){
   print(pl11)
   dev.off()
 
+  # upload to ftp
+  up(file = paste0(resultPath, '/', pdfName),
+     serverPath = paste0('/01_DATA/virtual_experiment/stands/4_post-dist_sim/', model, '/', pdfName))
+  #
 }
-
 
 evalHetRes <- function(metric, var, model){
   lapply(metric, plotHetRes, var, model)

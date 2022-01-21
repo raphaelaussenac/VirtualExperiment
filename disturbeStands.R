@@ -14,12 +14,13 @@ source('./R/wsDamages.R')
 source('./R/disturbe.R')
 source('./R/hetRes.R')
 source('./R/evalHetRes.R')
+source('./R/ftp.R')
 
 ###############################################################
 # select model (salem, ...)
 ###############################################################
 
-model <- 'samsara'
+model <- 'salem'
 
 ###############################################################
 # create file architecture
@@ -65,13 +66,13 @@ disturbe()
 
 # define variable of interest
 # e.g. BA, V_m3
-variable <- 'BA'
+var <- 'BA'
 # define resilience metrics
 # e.g. c('DegreeResilience', 'AbsRecovery', 'AbsResistance')
 metric = c('DegreeResilience', 'AbsRecovery', 'AbsResistance')
 
 # calculate complexity and resilience metrics
-hetRes(model, variable)
+hetRes(model, var)
 
 # plot complexity - resilience relationship
-evalHetRes(metric, variable, model)
+evalHetRes(metric, var, model)
