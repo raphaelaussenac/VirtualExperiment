@@ -12,6 +12,9 @@ library(data.table)
 # set work directory
 setwd("C:/Users/raphael.aussenac/Documents/GitHub/VirtualExperiment/data")
 
+# create folders
+if (!(dir.exists('../standModCompatibility'))) {dir.create('../standModCompatibility', recursive = TRUE)}
+
 ###############################################################
 # load initial stands
 ###############################################################
@@ -32,7 +35,6 @@ otherInit$mod <- c(rep('landclim', nbrows), rep('4c', nbrows), rep('samsara', nb
 
 # bind all init stands
 init <- rbind(salemInit, otherInit)
-
 
 ###############################################################
 # load pre-dist simulations and stack on init stands
@@ -104,22 +106,28 @@ batot <- batot %>% mutate(cl = case_when(cl == 'CL1' ~ 'peak',
                                          cl == 'CL4' ~ 'hotter-wetter'))
 #
 # plot all simID
-ggplot(batot) +
+pl1 <- ggplot(batot) +
 geom_line(aes(x = year, y = BAtot, col = simID)) +
 facet_wrap(.~mod, nrow = 1) +
 theme_bw() +
-theme(legend.position = 'none')
+theme(legend.position = 'none') +
+scale_x_continuous(minor_breaks = seq(2000 , 2010, 1), breaks = seq(2000, 2010, 1))
+ggsave(file = '../standModCompatibility/BA.pdf', plot = pl1, width = 15, height = 10)
 
 # plot all simID but assign color depending on CD factor
-ggplot(batot) +
+pl2 <- ggplot(batot) +
 geom_line(aes(x = year, y = BAtot, col = cl, group = simID)) +
 facet_wrap(.~mod, nrow = 1) +
 theme_bw() +
-theme(legend.position = 'bottom')
+theme(legend.position = 'bottom') +
+scale_x_continuous(minor_breaks = seq(2000 , 2010, 1), breaks = seq(2000, 2010, 1))
+ggsave(file = '../standModCompatibility/BAclim.pdf', plot = pl2, width = 15, height = 10)
 
 # plot only climate 'hotter'
-ggplot(batot %>% filter(cl == 'hotter')) +
+pl3 <- ggplot(batot %>% filter(cl == 'hotter')) +
 geom_line(aes(x = year, y = BAtot, col = cl, group = simID)) +
 facet_wrap(.~mod, nrow = 1) +
 theme_bw() +
-theme(legend.position = 'bottom')
+theme(legend.position = 'bottom') +
+scale_x_continuous(minor_breaks = seq(2000 , 2010, 1), breaks = seq(2000, 2010, 1))
+ggsave(file = '../standModCompatibility/BAclimHotter.pdf', plot = pl3, width = 15, height = 10)
