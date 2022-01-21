@@ -1,4 +1,4 @@
-plotHetRes <- function(metric){
+plotHetRes <- function(metric, var){
 
   ###############################################################
   # initialisation
@@ -32,50 +32,50 @@ plotHetRes <- function(metric){
   # recovery distribution
   pl1 <- ggplot(data = df) +
   geom_histogram(aes(x = get(metric)), bins = 100) +
+  xlab(paste(var, '-', metric)) +
   theme_bw() #+
-  # ggsave(file = paste0(resultPath, '/resilience.jpg'), plot = pl1, width = 10, height = 10)
 
   # wind speed
   pl2 <- ggplot(data = df, aes(x = ws, y = get(metric))) +
   geom_boxplot() +
   stat_summary(fun = mean, geom = 'point', shape = 20, size = 5, color = 'red', fill = 'red') +
-  theme_bw() #+
-  # ggsave(file = paste0(resultPath, '/effectWS.jpg'), plot = pl2, width = 10, height = 10)
+  ylab(paste(var, '-', metric)) +
+  theme_bw()
 
   # climate
   pl3 <- ggplot(data = df, aes(x = climate, y = get(metric))) +
   geom_boxplot() +
   stat_summary(fun = mean, geom = 'point', shape = 20, size = 5, color = 'red', fill = 'red') +
-  theme_bw() #+
-  # ggsave(file = paste0(resultPath, '/effectCL.jpg'), plot = pl3, width = 10, height = 10)
+  ylab(paste(var, '-', metric)) +
+  theme_bw()
 
   # composition
   pl4 <- ggplot(data = df, aes(x = reorder(cd,-get(metric), na.rm = TRUE), y = get(metric), -cd, na.rm = TRUE)) +
   geom_boxplot() +
   stat_summary(fun = mean, geom = 'point', shape = 20, size = 5, color = 'red', fill = 'red') +
-  theme_bw() #+
-  # ggsave(file = paste0(resultPath, '/effectCD.jpg'), plot = pl4, width = 10, height = 10)
+  ylab(paste(var, '-', metric)) +
+  theme_bw()
 
   # gini
   pl5 <- ggplot(data = df, aes(x = gi, y = get(metric), -cd, na.rm = TRUE)) +
   geom_boxplot() +
   stat_summary(fun = mean, geom = 'point', shape = 20, size = 5, color = 'red', fill = 'red') +
-  theme_bw() #+
-  # ggsave(file = paste0(resultPath, '/effectGI.jpg'), plot = pl5, width = 10, height = 10)
+  ylab(paste(var, '-', metric)) +
+  theme_bw()
 
   # dg
   pl6 <- ggplot(data = df, aes(x = dg, y = get(metric), -cd, na.rm = TRUE)) +
   geom_boxplot() +
   stat_summary(fun = mean, geom = 'point', shape = 20, size = 5, color = 'red', fill = 'red') +
-  theme_bw() #+
-  # ggsave(file = paste0(resultPath, '/effectDg.jpg'), plot = pl6, width = 10, height = 10)
+  ylab(paste(var, '-', metric)) +
+  theme_bw()
 
   # sp richness
   pl7 <- ggplot(data = df, aes(x = NclassSpini, y = get(metric))) +
   geom_boxplot() +
   stat_summary(fun = mean, geom = 'point', shape = 20, size = 5, color = 'red', fill = 'red') +
-  theme_bw() #+
-  # ggsave(file = paste0(resultPath, '/effectDI.jpg'), plot = pl7, width = 10, height = 10)
+  ylab(paste(var, '-', metric)) +
+  theme_bw()
 
   # f(gini, by dg, ws)
   pl8 <- ggplot(data = df, aes(x = gi, y = get(metric))) +
@@ -83,9 +83,9 @@ plotHetRes <- function(metric){
   scale_fill_manual(values = c('chartreuse2', 'orangered', 'turquoise1', 'darkorchid2')) +
   stat_summary(fun = mean, geom = 'point', shape = 19, size = 5, col = 'black') +
   facet_wrap(dg~ws, nrow = 1) +
+  ylab(paste(var, '-', metric)) +
   theme_bw() +
-  theme(strip.background = element_rect(colour = 'black', fill = 'white')) #+
-  # ggsave(file = paste0(resultPath, '/giniNested.jpg'), plot = pl8, width = 10, height = 10)
+  theme(strip.background = element_rect(colour = 'black', fill = 'white'))
 
   # f(gini, by dg, ws and cl)
   pl9 <- ggplot(data = df, aes(x = gi, y = get(metric))) +
@@ -93,27 +93,28 @@ plotHetRes <- function(metric){
   scale_fill_manual(values = c('chartreuse2', 'orangered', 'turquoise1', 'darkorchid2')) +
   stat_summary(fun = mean, geom = 'point', shape = 19, size = 5, col = 'black') +
   facet_wrap(dg~ws, nrow = 1) +
+  ylab(paste(var, '-', metric)) +
   theme_bw() +
-  theme(strip.background = element_rect(colour = 'black', fill = 'white'), legend.position = 'bottom') #+
-  # ggsave(file = paste0(resultPath, '/giniClimNested.jpg'), plot = pl9, width = 10, height = 10)
+  theme(strip.background = element_rect(colour = 'black', fill = 'white'), legend.position = 'bottom')
 
   # f(sp richness, by dg, ws)
   pl10 <- ggplot(data = df, aes(x = NclassSpini, y = get(metric))) +
   geom_boxplot() +
   stat_summary(fun = mean, geom = 'point', shape = 19, size = 5, col = 'black') +
   facet_wrap(dg~ws, nrow = 1) +
+  ylab(paste(var, '-', metric)) +
   theme_bw() +
   theme(strip.background = element_rect(colour = 'black', fill = 'white'))
-  # ggsave(file = paste0(resultPath, '/spNested.jpg'), plot = pl10, width = 10, height = 10)
+
 
   # f(sp richness, by dg, ws)
   pl11 <- ggplot(data = df, aes(x = NclassSpini, y = get(metric))) +
   geom_boxplot(aes(fill = gi)) +
   stat_summary(fun = mean, geom = 'point', shape = 19, size = 5, col = 'black') +
   facet_wrap(dg~ws, nrow = 1) +
+  ylab(paste(var, '-', metric)) +
   theme_bw() +
   theme(strip.background = element_rect(colour = 'black', fill = 'white'), legend.position = 'bottom')
-  # ggsave(file = paste0(resultPath, '/spGiNested.jpg'), plot = pl11, width = 10, height = 10)
 
   # save all plots in a single pdf
   pdf(paste0(resultPath, '/', metric, '.pdf'), width = 10, height = 10)
@@ -133,6 +134,6 @@ plotHetRes <- function(metric){
 }
 
 
-evalHetRes <- function(metric){
-  lapply(metric, plotHetRes)
+evalHetRes <- function(metric, var){
+  lapply(metric, plotHetRes, var)
 }

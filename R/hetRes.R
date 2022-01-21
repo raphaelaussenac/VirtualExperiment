@@ -1,4 +1,4 @@
-hetRes <- function(model){
+hetRes <- function(model, var){
 
   ###############################################################
   # initialisation
@@ -93,7 +93,7 @@ hetRes <- function(model){
     # plot(df2, Nvar='V_m3', RecTime=20, normalize='baseline')
 
     # recovery metrics
-    rec <- EventResilience(df2, Nvar = 'V_m3', RecTime = 20, normalize = 'baseline')
+    rec <- EventResilience(df2, Nvar = var, RecTime = 20, normalize = 'baseline')
     rec$simulationId <- ID
     return(rec)
 
