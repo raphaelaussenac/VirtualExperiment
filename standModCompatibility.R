@@ -10,7 +10,7 @@ library(tidyverse)
 library(data.table)
 
 # set work directory
-setwd('C:/Users/raphael.aussenac/Documents/GitHub/VirtualExperiment/data')
+setwd('./Documents/github/VirtualExperiment/data')
 
 # load source
 source('../R/ftp.R')
@@ -24,13 +24,13 @@ if (!(dir.exists('../standModCompatibility'))) {dir.create('../standModCompatibi
 
 # salem initial stands
 initPath <- paste0('./init/salem/')
-csvFile <- list.files(path = initPath, pattern = '\\.csv$')
+csvFile <- list.files(path = initPath, pattern = '.csv')
 salemInit <- read.csv(paste0(initPath, csvFile), sep = ';')
 salemInit$mod <- 'salem'
 
 # other models initial stands
 initPath <- paste0('./init/otherModels/')
-csvFile <- list.files(path = initPath, pattern = '\\.csv$')
+csvFile <- list.files(path = initPath, pattern = '.csv')
 otherInit <- read.csv(paste0(initPath, csvFile), sep = ';')
 nbrows <- nrow(otherInit)
 otherInit <- rbind(otherInit, otherInit, otherInit)

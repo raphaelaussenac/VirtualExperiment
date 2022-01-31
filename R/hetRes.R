@@ -66,7 +66,7 @@ hetRes <- function(model, var){
   ###############################################################
 
   # recdf <- data.frame()
-  hetResMet <- function(i, simPath, init, dist, sim, spCor){
+  hetResMet <- function(i, simPath, init, dist, sim, spCor, var){
     # load sim data
     sim <- read.csv(paste0(simPath, '/', i), sep = ';')
     ID <- sim$simID[1]
@@ -103,7 +103,7 @@ hetRes <- function(model, var){
   start_time <- Sys.time()
   cl <- makeCluster(6)
   registerDoParallel(cl)
-  df <- foreach(i = simList, .combine = 'rbind', .packages = c('forestdiversity', 'dplyr')) %dopar% {hetResMet(i = i, simPath = simPath, init = init, dist = dist, sim = sim, spCor = spCor)}
+  df <- foreach(i = simList, .combine = 'rbind', .packages = c('forestdiversity', 'dplyr')) %dopar% {hetResMet(i = i, simPath = simPath, init = init, dist = dist, sim = sim, spCor = spCor, var = var)}
   stopCluster(cl)
   end_time <- Sys.time()
   end_time - start_time

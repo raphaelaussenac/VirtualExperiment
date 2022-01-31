@@ -6,7 +6,7 @@
 rm(list = ls())
 
 # set work directory
-setwd('C:/Users/raphael.aussenac/Documents/GitHub/VirtualExperiment')
+setwd('./Documents/github/VirtualExperiment')
 
 # load source (all R files in R folder)
 source('./R/cws.R')
@@ -20,7 +20,7 @@ source('./R/ftp.R')
 # select model (salem, ...)
 ###############################################################
 
-model <- 'salem'
+model <- 'landclim'
 
 ###############################################################
 # create file architecture

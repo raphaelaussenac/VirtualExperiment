@@ -6,3 +6,4 @@
 *.back
 *.jpg
 ftp.R
+*generate_trees*.R
